@@ -130,6 +130,7 @@ void UIManager::showHelp() const {
               << "  achievements - Show all achievements and progress\n"
               << "  new          - Create a new pet\n"
               << "  help         - Show this help message\n"
+              << "  clear        - Clear the screen\n"
               << "  exit         - Exit the application\n"
               << std::endl;
 }
