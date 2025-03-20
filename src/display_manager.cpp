@@ -1,6 +1,10 @@
 #include "../include/display_manager.h"
 #include <iostream>
 #include <algorithm>
+#include <cmath>
+#include <chrono>
+#include <iomanip>
+#include <sstream>
 
 DisplayManager::DisplayManager(PetState& petState)
     : m_petState(petState)
@@ -50,16 +54,25 @@ void DisplayManager::displayPetHeader() const {
     }
     std::cout << std::endl;
     
+    // Добавляем описание питомца
+    std::cout << "Description: " << m_petState.getDescription() << std::endl;
+    
+    // Статистика сразу после описания
     std::cout << "\nStats:" << std::endl;
     std::cout << "  Hunger: " << static_cast<int>(std::floor(m_petState.getHunger())) << "%" << std::endl;
     std::cout << "  Happiness: " << static_cast<int>(std::floor(m_petState.getHappiness())) << "%" << std::endl;
     std::cout << "  Energy: " << static_cast<int>(std::floor(m_petState.getEnergy())) << "%" << std::endl;
-    std::cout << "  XP: " << m_petState.getXP();
+    std::cout << "  XP: " << m_petState.getXP() << std::endl;
     
     if (m_petState.getEvolutionLevel() != PetState::EvolutionLevel::Ancient) {
         std::cout << " / " << m_petState.getXPForNextLevel() << " for next level";
     }
-    std::cout << std::endl << std::endl;
+    std::cout << std::endl;
+    
+    // Добавляем информацию о достижениях
+    const auto& achievementSystem = m_petState.getAchievementSystem();
+    auto unlockedAchievements = achievementSystem.getUnlockedAchievements();
+    std::cout << "Achievements: " << unlockedAchievements.size() << "/" << static_cast<int>(AchievementType::Count) << " unlocked" << std::endl << std::endl;
 }
 
 std::string DisplayManager::getEvolutionLevelName(PetState::EvolutionLevel level) const {

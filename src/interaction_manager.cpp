@@ -100,6 +100,66 @@ void InteractionManager::playWithPet() {
 
 void InteractionManager::showStatus() const {
     m_displayManager.displayPetHeader();
+    
+    auto now = std::chrono::system_clock::now();
+    auto birthDate = m_petState.getBirthDate();
+    
+    auto birthTime_t = std::chrono::system_clock::to_time_t(birthDate);
+    std::tm birthTm = *std::localtime(&birthTime_t);
+    
+    char birthDateStr[20];
+    std::strftime(birthDateStr, sizeof(birthDateStr), "%d %b %Y", &birthTm);
+
+    auto age = std::chrono::duration_cast<std::chrono::hours>(now - birthDate).count();
+    int ageYears = age / (24 * 365);
+    int ageDays = (age % (24 * 365)) / 24;
+    
+    std::cout << "Birth date: " << birthDateStr;
+    std::cout << " (";
+    if (ageYears > 0) {
+        std::cout << ageYears << "y";
+        if (ageDays > 0) {
+            std::cout << " ";
+        }
+    }
+    if (ageDays > 0) {
+        std::cout << ageDays << "d";
+    } else {
+        std::cout << age << "h";
+    }
+    std::cout << ")";
+    std::cout << std::endl;
+    
+    auto lastInteraction = m_petState.getLastInteractionTime();
+    
+    auto lastInteractionTime_t = std::chrono::system_clock::to_time_t(lastInteraction);
+    std::tm lastInteractionTm = *std::localtime(&lastInteractionTime_t);
+    
+    char lastInteractionStr[20];
+    std::strftime(lastInteractionStr, sizeof(lastInteractionStr), "%d %b %Y", &lastInteractionTm);
+    
+    auto timeSinceLastInteraction = std::chrono::duration_cast<std::chrono::minutes>(now - lastInteraction).count();
+    int days = timeSinceLastInteraction / (60 * 24);
+    int hours = (timeSinceLastInteraction % (60 * 24)) / 60;
+    int minutes = timeSinceLastInteraction % 60;
+    
+    std::cout << "Last interaction: " << lastInteractionStr;
+    std::cout << " (";
+    if (days > 0) {
+        std::cout << days << "d";
+        if (hours > 0 || minutes > 0) {
+            std::cout << " ";
+        }
+    }
+    if (hours > 0) {
+        std::cout << hours << "h";
+        if (minutes > 0) {
+            std::cout << " ";
+        }
+    }
+    std::cout << minutes << "m";
+    std::cout << ")";
+    std::cout << std::endl << std::endl;
 }
 
 void InteractionManager::showEvolutionProgress() const {
