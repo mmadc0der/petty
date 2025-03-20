@@ -28,16 +28,35 @@ int main(int argc, char* argv[]) {
 
         // Load pet state
         auto petState = std::make_unique<PetState>();
-        if (!petState->load()) {
-            std::cout << "Creating a new pet!" << std::endl;
-            petState->initialize();
-        }
-
+        bool loadSuccess = petState->load();
+        
         // Create game logic handler
         auto gameLogic = std::make_unique<GameLogic>(*petState);
         
+        // If load failed and it's not a "new" command, ask if user wants to create a new pet
+        if (!loadSuccess && (args.empty() || args[0] != "new")) {
+            std::cout << "Failed to load pet state. Would you like to create a new pet? (yes/no): ";
+            std::string response;
+            std::getline(std::cin, response);
+            
+            // Convert to lowercase for case-insensitive comparison
+            std::transform(response.begin(), response.end(), response.begin(), 
+                          [](unsigned char c) { return std::tolower(c); });
+            
+            if (response == "yes" || response == "y") {
+                gameLogic->createNewPet(true);
+                // Save the new pet
+                petState->save();
+            } else {
+                std::cout << "Exiting without creating a new pet." << std::endl;
+                return 1;
+            }
+        }
+        
         // Process the command
-        if (!parser->processCommand(args, *gameLogic)) {
+        if (args.empty()) {
+            parser->showHelp();
+        } else if (!parser->processCommand(args, *gameLogic)) {
             std::cerr << "Unknown command. Try 'pet help' for usage information." << std::endl;
             return 1;
         }

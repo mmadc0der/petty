@@ -26,6 +26,10 @@ CommandParser::CommandParser() {
     m_commandHandlers["achievements"] = [](GameLogic& gameLogic) -> void {
         gameLogic.showAchievements();
     };
+    
+    m_commandHandlers["new"] = [](GameLogic& gameLogic) -> void {
+        gameLogic.createNewPet();
+    };
 }
 
 void CommandParser::showHelp() const {
@@ -38,6 +42,7 @@ void CommandParser::showHelp() const {
               << "  play         - Play with your pet\n"
               << "  evolve       - Show evolution progress\n"
               << "  achievements - Show all achievements and progress\n"
+              << "  new          - Create a new pet\n"
               << "  help         - Show this help message\n"
               << std::endl;
 }

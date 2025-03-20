@@ -479,3 +479,44 @@ void GameLogic::showAchievements() const {
         }
     }
 }
+
+bool GameLogic::createNewPet(bool force) {
+    // Check if a save file exists and we're not forcing overwrite
+    if (m_petState.saveFileExists() && !force) {
+        std::cout << "A pet already exists. Do you want to overwrite it? (yes/no): ";
+        std::string response;
+        std::getline(std::cin, response);
+        
+        // Convert to lowercase for case-insensitive comparison
+        std::transform(response.begin(), response.end(), response.begin(), 
+                      [](unsigned char c) { return std::tolower(c); });
+        
+        if (response != "yes" && response != "y") {
+            std::cout << "Pet creation cancelled." << std::endl;
+            return false;
+        }
+    }
+    
+    // Ask for pet name
+    std::cout << "Enter a name for your new pet: ";
+    std::string name;
+    std::getline(std::cin, name);
+    
+    // Trim whitespace from beginning and end
+    name.erase(0, name.find_first_not_of(" \t\n\r\f\v"));
+    name.erase(name.find_last_not_of(" \t\n\r\f\v") + 1);
+    
+    // Use default name if empty
+    if (name.empty()) {
+        name = "Unnamed Pet";
+    }
+    
+    // Initialize new pet with the given name
+    m_petState.initialize(name);
+    std::cout << "\nCreated a new pet named '" << name << "'!" << std::endl;
+    
+    // Show the new pet's status
+    showStatus();
+    
+    return true;
+}

@@ -35,9 +35,21 @@ public:
     PetState();
     
     /**
+     * @brief Check if a saved state file exists
+     * @return true if a state file exists, false otherwise
+     */
+    bool saveFileExists() const;
+    
+    /**
      * @brief Initialize a new pet with default values
      */
     void initialize();
+    
+    /**
+     * @brief Initialize a new pet with a specific name
+     * @param name The name for the new pet
+     */
+    void initialize(std::string_view name);
     
     /**
      * @brief Load pet state from file

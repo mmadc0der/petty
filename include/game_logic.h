@@ -42,6 +42,13 @@ public:
      * @brief Show achievements, including locked ones with progress
      */
     void showAchievements() const;
+    
+    /**
+     * @brief Create a new pet, optionally overwriting an existing one
+     * @param force If true, will create a new pet even if one already exists
+     * @return true if a new pet was created, false otherwise
+     */
+    bool createNewPet(bool force = false);
 
 private:
     /**

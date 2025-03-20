@@ -28,7 +28,11 @@ PetState::PetState()
 }
 
 void PetState::initialize() {
-    m_name = "Unnamed Pet";
+    initialize("Unnamed Pet");
+}
+
+void PetState::initialize(std::string_view name) {
+    m_name = name;
     m_evolutionLevel = EvolutionLevel::Egg;
     m_xp = 0;
     m_hunger = 50.0f;
@@ -73,14 +77,22 @@ std::filesystem::path PetState::getStateFilePath() const {
 #endif
 }
 
+bool PetState::saveFileExists() const {
+    try {
+        auto statePath = getStateFilePath();
+        return std::filesystem::exists(statePath);
+    } catch (const std::exception& e) {
+        std::cerr << "Error checking save file: " << e.what() << std::endl;
+        return false;
+    }
+}
+
 bool PetState::load() {
     try {
         auto statePath = getStateFilePath();
         
         if (!std::filesystem::exists(statePath)) {
-            std::cout << "Creating a new pet!" << std::endl;
-            initialize();
-            return true;
+            return false;
         }
         
         std::ifstream file(statePath, std::ios::binary);
