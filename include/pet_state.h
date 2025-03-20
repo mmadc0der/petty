@@ -26,7 +26,8 @@ public:
         Child = 2,
         Teen = 3,
         Adult = 4,
-        Master = 5
+        Master = 5,
+        Ancient = 6
     };
     
     /**

@@ -244,7 +244,7 @@ bool PetState::addXP(uint32_t amount) {
     // Check if we should evolve
     uint32_t xpForNextLevel = getXPForNextLevel();
     
-    if (m_xp >= xpForNextLevel && m_evolutionLevel < EvolutionLevel::Master) {
+    if (m_xp >= xpForNextLevel && m_evolutionLevel < EvolutionLevel::Ancient) {
         m_evolutionLevel = static_cast<EvolutionLevel>(static_cast<uint8_t>(m_evolutionLevel) + 1);
         
         // Unlock evolution achievement
@@ -253,6 +253,11 @@ bool PetState::addXP(uint32_t amount) {
         // Unlock master achievement if reached max level
         if (m_evolutionLevel == EvolutionLevel::Master) {
             m_achievementSystem.unlock(AchievementType::Master);
+        }
+        
+        // Unlock eternal achievement if reached ancient level
+        if (m_evolutionLevel == EvolutionLevel::Ancient) {
+            m_achievementSystem.unlock(AchievementType::Eternal);
         }
         
         return true; // Evolved
@@ -306,12 +311,13 @@ void PetState::updateInteractionTime() {
 
 uint32_t PetState::getXPForNextLevel() const {
     // XP required for each evolution level
-    static const std::array<uint32_t, 5> xpRequirements = {
+    static const std::array<uint32_t, 6> xpRequirements = {
         100,   // Egg -> Baby
         300,   // Baby -> Child
         600,   // Child -> Teen
         1000,  // Teen -> Adult
-        2000   // Adult -> Master
+        2000,  // Adult -> Master
+        10000  // Master -> Ancient
     };
     
     uint8_t currentLevel = static_cast<uint8_t>(m_evolutionLevel);
@@ -325,40 +331,50 @@ uint32_t PetState::getXPForNextLevel() const {
 std::string_view PetState::getAsciiArt() const {
     // Using string_view for better performance with string literals
     static const std::string eggArt = R"(
-  .--.
- /    \
-|      |
- \    /
-  '--'
+  .-.
+ /   \
+ \   /
+  '-'
 )";
     static const std::string babyArt = R"(
+ |\_/|
+ `o.o'
+ =(_)=
+)";
+    static const std::string childArt = R"(
   ^__^
  (o.o)
  (___) 
 )";
-    static const std::string childArt = R"(
-  ^___^
- (o   o)
- (>.<) 
-  ---  
-)";
     static const std::string teenArt = R"(
-   /\_/\
-  ( o.o )
-   > ^ <
+  /\_/\
+ ( o.o )
+  > ^ <
 )";
     static const std::string adultArt = R"(
-    /\_/\
-   ( ^.^ )
-   (>   <)
-    ---
+  /\_/\
+ ( ^.^ )
+ (>   <)
+   ---
 )";
     static const std::string masterArt = R"(
-      /\_/\
- /\  / o o \
-(  )/ > ^ < \
- \/  \~~~~~/ 
-     /     \
+  .       .         
+  \`-"'"-'/
+   } 6 6 {    
+  =.  Y  ,=   
+    /^^^\  .
+   /     \  )           
+  (  )-(  )/ 
+   ""   ""
+)";
+    static const std::string ancientArt = R"(
+       .     .
+       |\-=-/|
+    /| |O _ O| |\
+  /' \ \_^-^_/ / `\
+/'    \-/ ~ \-/    `\
+|      /\\ //\      |
+ \|\|\/-""-""-\/|/|/
 )";
 
     switch (m_evolutionLevel) {
@@ -374,6 +390,8 @@ std::string_view PetState::getAsciiArt() const {
             return adultArt;
         case EvolutionLevel::Master:
             return masterArt;
+        case EvolutionLevel::Ancient:
+            return ancientArt;
         default:
             static const std::string unknown = "Unknown evolution level";
             return unknown;
@@ -388,6 +406,7 @@ std::string_view PetState::getDescription() const {
     static const std::string teenDesc = "Your pet is now a teenager. It's becoming more independent but still needs your care.";
     static const std::string adultDesc = "Your pet has reached adulthood. It's strong, confident, and loyal to you.";
     static const std::string masterDesc = "Your pet has reached its final form! It's magnificent and powerful.";
+    static const std::string ancientDesc = "Your pet has reached the ancient level! It's a legendary creature with immense power.";
     
     switch (m_evolutionLevel) {
         case EvolutionLevel::Egg:
@@ -402,6 +421,8 @@ std::string_view PetState::getDescription() const {
             return adultDesc;
         case EvolutionLevel::Master:
             return masterDesc;
+        case EvolutionLevel::Ancient:
+            return ancientDesc;
         default:
             static const std::string unknown = "Unknown evolution level";
             return unknown;

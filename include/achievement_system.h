@@ -17,11 +17,12 @@ enum class AchievementType : uint8_t {
     HappyDays,      // Reach 100% happiness
     FullyRested,    // Reach 100% energy
     Evolution,      // Evolve your pet to the next stage
-    Master,         // Reach the highest evolution level
+    Master,         // Reach the Master evolution level
     Playful,        // Play with your pet 5 times
     Dedicated,      // Interact with your pet for 7 consecutive days
     Explorer,       // Try all available commands
     Survivor,       // Keep your pet alive for 30 days
+    Eternal,        // Reach the Ancient evolution level
     
     // Add more achievements here
     
@@ -181,7 +182,8 @@ private:
         "Playful",
         "Dedicated",
         "Explorer",
-        "Survivor"
+        "Survivor",
+        "Eternal"
     };
     
     // Static array of achievement descriptions
@@ -191,11 +193,12 @@ private:
         "Reach 100% happiness",
         "Reach 100% energy",
         "Evolve your pet to the next stage",
-        "Reach the highest evolution level",
+        "Reach the Master evolution level",
         "Play with your pet 5 times",
         "Interact with your pet for 7 consecutive days",
         "Try all available commands",
-        "Keep your pet alive for 30 days"
+        "Keep your pet alive for 30 days",
+        "Reach the Ancient evolution level"
     };
     
     // Static array of required progress for achievements
@@ -209,6 +212,7 @@ private:
         5,  // Playful
         7,  // Dedicated
         1,  // Explorer
-        30  // Survivor
+        30,  // Survivor
+        1  // Eternal
     };
 };

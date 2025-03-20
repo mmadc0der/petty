@@ -42,6 +42,9 @@ void GameLogic::showStatus() const {
         case PetState::EvolutionLevel::Master:
             std::cout << "Master (Level 5)";
             break;
+        case PetState::EvolutionLevel::Ancient:
+            std::cout << "Ancient (Level 6)";
+            break;
     }
     std::cout << std::endl;
     
@@ -50,7 +53,7 @@ void GameLogic::showStatus() const {
     std::cout << "\nStats:" << std::endl;
     std::cout << "  XP: " << m_petState.getXP();
     
-    if (m_petState.getEvolutionLevel() != PetState::EvolutionLevel::Master) {
+    if (m_petState.getEvolutionLevel() != PetState::EvolutionLevel::Ancient) {
         std::cout << " / " << m_petState.getXPForNextLevel() << " for next level";
     }
     std::cout << std::endl;
@@ -174,7 +177,7 @@ void GameLogic::feedPet() {
     // Show current hunger level
     std::cout << "Hunger: " << static_cast<int>(std::floor(m_petState.getHunger())) << "%" << std::endl;
     std::cout << "XP: " << m_petState.getXP();
-    if (m_petState.getEvolutionLevel() != PetState::EvolutionLevel::Master) {
+    if (m_petState.getEvolutionLevel() != PetState::EvolutionLevel::Ancient) {
         std::cout << " / " << m_petState.getXPForNextLevel() << " for next level";
     }
     std::cout << std::endl;
@@ -186,7 +189,7 @@ void GameLogic::playWithPet() {
     m_petState.decreaseEnergy(10);
     
     // Add XP
-    bool evolved = m_petState.addXP(150);
+    bool evolved = m_petState.addXP(1500);
     
     // Update interaction time
     m_petState.updateInteractionTime();
@@ -214,7 +217,7 @@ void GameLogic::playWithPet() {
     std::cout << "Happiness: " << static_cast<int>(std::floor(m_petState.getHappiness())) << "%" << std::endl;
     std::cout << "Energy: " << static_cast<int>(std::floor(m_petState.getEnergy())) << "%" << std::endl;
     std::cout << "XP: " << m_petState.getXP();
-    if (m_petState.getEvolutionLevel() != PetState::EvolutionLevel::Master) {
+    if (m_petState.getEvolutionLevel() != PetState::EvolutionLevel::Ancient) {
         std::cout << " / " << m_petState.getXPForNextLevel() << " for next level";
     }
     std::cout << std::endl;
@@ -243,12 +246,15 @@ void GameLogic::showEvolutionProgress() const {
         case PetState::EvolutionLevel::Master:
             std::cout << "Master (Level 5)";
             break;
+        case PetState::EvolutionLevel::Ancient:
+            std::cout << "Ancient";
+            break;
     }
     std::cout << std::endl;
     
     std::cout << "Description: " << m_petState.getDescription() << std::endl;
     
-    if (m_petState.getEvolutionLevel() != PetState::EvolutionLevel::Master) {
+    if (m_petState.getEvolutionLevel() != PetState::EvolutionLevel::Ancient) {
         uint32_t currentXP = m_petState.getXP();
         uint32_t requiredXP = m_petState.getXPForNextLevel();
         float percentage = static_cast<float>(currentXP) / requiredXP * 100.0f;
@@ -287,13 +293,16 @@ void GameLogic::showEvolutionProgress() const {
             case PetState::EvolutionLevel::Master:
                 std::cout << "Master (Level 5)";
                 break;
+            case PetState::EvolutionLevel::Ancient:
+                std::cout << "Ancient (Level 6)";
+                break;
             default:
                 std::cout << "Unknown";
         }
         std::cout << std::endl;
     } else {
         std::cout << "\nYour pet has reached the maximum evolution level!" << std::endl;
-        std::cout << "Congratulations on raising a master pet!" << std::endl;
+        std::cout << "Congratulations on raising an ancient pet!" << std::endl;
     }
 }
 
@@ -420,7 +429,7 @@ void GameLogic::showAchievements() const {
         auto currentLevel = static_cast<int>(m_petState.getEvolutionLevel());
         std::cout << "  - " << AchievementSystem::getName(AchievementType::Evolution) 
                   << ": " << AchievementSystem::getDescription(AchievementType::Evolution) 
-                  << " (Level " << currentLevel << "/4)" << std::endl;
+                  << " (Level " << currentLevel << "/6)" << std::endl;
     }
     
     // Check for master achievement progress
@@ -431,6 +440,16 @@ void GameLogic::showAchievements() const {
         std::cout << "  - " << AchievementSystem::getName(AchievementType::Master) 
                   << ": " << AchievementSystem::getDescription(AchievementType::Master) 
                   << " (Level " << currentLevel << "/5)" << std::endl;
+    }
+    
+    // Check for eternal achievement progress
+    if (std::find(unlockedAchievements.begin(), unlockedAchievements.end(), AchievementType::Eternal) 
+        == unlockedAchievements.end()) {
+        hasLockedAchievements = true;
+        auto currentLevel = static_cast<int>(m_petState.getEvolutionLevel());
+        std::cout << "  - " << AchievementSystem::getName(AchievementType::Eternal) 
+                  << ": " << AchievementSystem::getDescription(AchievementType::Eternal) 
+                  << " (Level " << currentLevel << "/6)" << std::endl;
     }
     
     // Check for hunger-based achievement progress
@@ -535,6 +554,8 @@ std::string GameLogic::getEvolutionLevelName(PetState::EvolutionLevel level) con
             return "Adult";
         case PetState::EvolutionLevel::Master:
             return "Master";
+        case PetState::EvolutionLevel::Ancient:
+            return "Ancient";
         default:
             return "Unknown";
     }
