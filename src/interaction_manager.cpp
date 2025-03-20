@@ -15,11 +15,16 @@ InteractionManager::InteractionManager(
 }
 
 void InteractionManager::feedPet() noexcept {
-    // Check if pet was already full
-    bool wasFull = (m_petState.getHunger() == 100);
+    // Get maximum stat value for this evolution level
+    float maxStatValue = m_petState.getMaxStatValue();
     
-    // Increase hunger and add XP
+    // Check if pet was already full
+    bool wasFull = (m_petState.getHunger() >= maxStatValue - 0.01f); // Small epsilon to handle floating point comparisons
+    
+    // Increase hunger using absolute value from config
     m_petState.increaseHunger(GameConfig::getFeedingHungerIncrease());
+    
+    // Add XP
     bool evolved = m_petState.addXP(GameConfig::getFeedingXPGain());
     
     // Update interaction time
@@ -39,9 +44,9 @@ void InteractionManager::feedPet() noexcept {
                 << "!" << std::endl;
         std::cout << m_petState.getAsciiArt() << std::endl;
         std::cout << m_petState.getDescription() << std::endl;
-    } else if (wasFull && m_petState.getHunger() == 100) {
+    } else if (wasFull && m_petState.getHunger() >= maxStatValue - 0.01f) {
         m_displayManager.displayMessage("Your pet is already full! It doesn't want to eat more.");
-    } else if (m_petState.getHunger() == 100) {
+    } else if (m_petState.getHunger() >= maxStatValue - 0.01f) {
         m_displayManager.displayMessage("Your pet is now full and very satisfied!");
     } else {
         m_displayManager.displayMessage("Your pet enjoys the food and feels less hungry.");
@@ -50,20 +55,24 @@ void InteractionManager::feedPet() noexcept {
     // Check for newly unlocked achievements
     m_achievementManager.displayNewlyUnlockedAchievements();
     
-    // Show current hunger level
-    std::cout << "Hunger: " << static_cast<int>(std::floor(m_petState.getHunger())) << "%" << std::endl;
+    // Show current hunger level (display absolute value, not percentage)
+    std::cout << "Hunger: " << static_cast<int>(std::floor(m_petState.getHunger())) << " / " 
+              << static_cast<int>(maxStatValue) << std::endl;
     std::cout << "XP: " << m_petState.getXP();
-    if (m_petState.getEvolutionLevel() != PetState::EvolutionLevel::Ancient) {
+    if (m_petState.getEvolutionLevel() != EvolutionLevel::Ancient) {
         std::cout << " / " << m_petState.getXPForNextLevel() << " for next level";
     }
     std::cout << std::endl;
 }
 
 void InteractionManager::playWithPet() noexcept {
-    // Check if pet was already at max happiness
-    bool wasMax = (m_petState.getHappiness() == 100);
+    // Get maximum stat value for this evolution level
+    float maxStatValue = m_petState.getMaxStatValue();
     
-    // Increase happiness and decrease energy
+    // Check if pet was already at max happiness
+    bool wasMax = (m_petState.getHappiness() >= maxStatValue - 0.01f); // Small epsilon to handle floating point comparisons
+    
+    // Increase happiness and decrease energy using absolute values from config
     m_petState.increaseHappiness(GameConfig::getPlayingHappinessIncrease());
     m_petState.decreaseEnergy(GameConfig::getPlayingEnergyDecrease());
     
@@ -87,7 +96,7 @@ void InteractionManager::playWithPet() noexcept {
                 << "!" << std::endl;
         std::cout << m_petState.getAsciiArt() << std::endl;
         std::cout << m_petState.getDescription() << std::endl;
-    } else if (wasMax && m_petState.getHappiness() == 100) {
+    } else if (wasMax && m_petState.getHappiness() >= maxStatValue - 0.01f) {
         m_displayManager.displayMessage("Your pet is already extremely happy! It's having the time of its life!");
     } else {
         m_displayManager.displayMessage("Your pet jumps around playfully. It's having fun!");
@@ -99,11 +108,13 @@ void InteractionManager::playWithPet() noexcept {
     // Check for newly unlocked achievements
     m_achievementManager.displayNewlyUnlockedAchievements();
     
-    // Show current stats
-    std::cout << "Happiness: " << static_cast<int>(std::floor(m_petState.getHappiness())) << "%" << std::endl;
-    std::cout << "Energy: " << static_cast<int>(std::floor(m_petState.getEnergy())) << "%" << std::endl;
+    // Show current stats (display absolute values, not percentages)
+    std::cout << "Happiness: " << static_cast<int>(std::floor(m_petState.getHappiness())) << " / " 
+              << static_cast<int>(maxStatValue) << std::endl;
+    std::cout << "Energy: " << static_cast<int>(std::floor(m_petState.getEnergy())) << " / " 
+              << static_cast<int>(maxStatValue) << std::endl;
     std::cout << "XP: " << m_petState.getXP();
-    if (m_petState.getEvolutionLevel() != PetState::EvolutionLevel::Ancient) {
+    if (m_petState.getEvolutionLevel() != EvolutionLevel::Ancient) {
         std::cout << " / " << m_petState.getXPForNextLevel() << " for next level";
     }
     std::cout << std::endl;
@@ -189,25 +200,25 @@ void InteractionManager::showEvolutionProgress() const noexcept {
     
     std::cout << "Current evolution: ";
     switch (m_petState.getEvolutionLevel()) {
-        case PetState::EvolutionLevel::Egg:
+        case EvolutionLevel::Egg:
             std::cout << "Egg (Level 0)";
             break;
-        case PetState::EvolutionLevel::Baby:
+        case EvolutionLevel::Baby:
             std::cout << "Baby (Level 1)";
             break;
-        case PetState::EvolutionLevel::Child:
+        case EvolutionLevel::Child:
             std::cout << "Child (Level 2)";
             break;
-        case PetState::EvolutionLevel::Teen:
+        case EvolutionLevel::Teen:
             std::cout << "Teen (Level 3)";
             break;
-        case PetState::EvolutionLevel::Adult:
+        case EvolutionLevel::Adult:
             std::cout << "Adult (Level 4)";
             break;
-        case PetState::EvolutionLevel::Master:
+        case EvolutionLevel::Master:
             std::cout << "Master (Level 5)";
             break;
-        case PetState::EvolutionLevel::Ancient:
+        case EvolutionLevel::Ancient:
             std::cout << "Ancient";
             break;
     }
@@ -215,7 +226,7 @@ void InteractionManager::showEvolutionProgress() const noexcept {
     
     std::cout << "Description: " << m_petState.getDescription() << std::endl;
     
-    if (m_petState.getEvolutionLevel() != PetState::EvolutionLevel::Ancient) {
+    if (m_petState.getEvolutionLevel() != EvolutionLevel::Ancient) {
         uint32_t currentXP = m_petState.getXP();
         uint32_t requiredXP = m_petState.getXPForNextLevel();
         float percentage = static_cast<float>(currentXP) / requiredXP * 100.0f;
@@ -238,25 +249,25 @@ void InteractionManager::showEvolutionProgress() const noexcept {
         // Show next evolution level
         std::cout << "\nNext evolution: ";
         switch (m_petState.getEvolutionLevel()) {
-            case PetState::EvolutionLevel::Egg:
+            case EvolutionLevel::Egg:
                 std::cout << "Baby (Level 1)";
                 break;
-            case PetState::EvolutionLevel::Baby:
+            case EvolutionLevel::Baby:
                 std::cout << "Child (Level 2)";
                 break;
-            case PetState::EvolutionLevel::Child:
+            case EvolutionLevel::Child:
                 std::cout << "Teen (Level 3)";
                 break;
-            case PetState::EvolutionLevel::Teen:
+            case EvolutionLevel::Teen:
                 std::cout << "Adult (Level 4)";
                 break;
-            case PetState::EvolutionLevel::Adult:
+            case EvolutionLevel::Adult:
                 std::cout << "Master (Level 5)";
                 break;
-            case PetState::EvolutionLevel::Master:
+            case EvolutionLevel::Master:
                 std::cout << "Ancient";
                 break;
-            case PetState::EvolutionLevel::Ancient:
+            case EvolutionLevel::Ancient:
                 std::cout << "Already at maximum evolution";
                 break;
         }

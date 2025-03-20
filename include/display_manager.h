@@ -35,7 +35,7 @@ public:
      * @param level The evolution level
      * @return The name of the evolution level
      */
-    std::string_view getEvolutionLevelName(PetState::EvolutionLevel level) const noexcept;
+    std::string_view getEvolutionLevelName(EvolutionLevel level) const noexcept;
 
 private:
     // Reference to the pet state

@@ -31,17 +31,19 @@ std::optional<std::string> TimeManager::applyTimeEffects() noexcept {
         return std::nullopt;
     }
     
+    // Get the current maximum stat value for this evolution level
+    float maxStatValue = m_petState.getMaxStatValue();
+    
     // Apply effects based on time passed
-    // For each hour, decrease hunger, happiness, and increase energy
-    float hungerDecrease = static_cast<float>(std::min(GameConfig::getHungerDecreaseRate() * hoursPassed, 100.0));
-    float happinessDecrease = static_cast<float>(std::min(GameConfig::getHappinessDecreaseRate() * hoursPassed, 100.0));
+    // Calculate raw decreases - rate is given per hour in config
+    float hungerDecrease = static_cast<float>(GameConfig::getHungerDecreaseRate() * hoursPassed);
+    float happinessDecrease = static_cast<float>(GameConfig::getHappinessDecreaseRate() * hoursPassed);
+    float energyIncrease = static_cast<float>(GameConfig::getEnergyIncreaseRate() * hoursPassed);
     
-    // Always increase energy proportional to time passed
-    float energyIncrease = static_cast<float>(std::min(GameConfig::getEnergyIncreaseRate() * hoursPassed, 100.0));
-    m_petState.increaseEnergy(energyIncrease); // Pet rests while away
-    
+    // Apply the changes (these methods handle the capping at 0 or max)
     m_petState.decreaseHunger(hungerDecrease);
     m_petState.decreaseHappiness(happinessDecrease);
+    m_petState.increaseEnergy(energyIncrease); // Pet rests while away
     
     // Update last interaction time ONLY if we actually applied effects
     m_petState.updateInteractionTime();
@@ -57,11 +59,16 @@ std::optional<std::string> TimeManager::applyTimeEffects() noexcept {
             message = std::format("{:.1f} days have passed since your last visit.", daysPassed);
         }
         
-        if (m_petState.getHunger() < GameConfig::Warnings::HUNGER_WARNING_THRESHOLD) {
+        // Check warnings using absolute values
+        float hungerValue = m_petState.getHunger();
+        float happinessValue = m_petState.getHappiness();
+        
+        // Use absolute warning thresholds from config
+        if (hungerValue <= GameConfig::Warnings::HUNGER_WARNING_THRESHOLD) {
             message += "\nYour pet is very hungry!";
         }
         
-        if (m_petState.getHappiness() < GameConfig::Warnings::HAPPINESS_WARNING_THRESHOLD) {
+        if (happinessValue <= GameConfig::Warnings::HAPPINESS_WARNING_THRESHOLD) {
             message += "\nYour pet is sad and needs attention!";
         }
         

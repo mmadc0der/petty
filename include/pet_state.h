@@ -1,165 +1,202 @@
 #pragma once
 
-#include <string>
-#include <vector>
 #include <cstdint>
-#include <filesystem>
+#include <string>
 #include <chrono>
 #include <string_view>
-#include <memory>
+#include <optional>
+#include <filesystem>
 #include "achievement_system.h"
+#include "game_config.h" // Include GameConfig
 
 /**
- * @brief Represents the state of the virtual pet
- * 
- * Uses modern C++ features like std::chrono for time representation
- * and std::string_view for better performance
+ * @brief Evolution levels for the pet
+ */
+enum class EvolutionLevel : uint8_t {
+    Egg = 0,
+    Baby = 1,
+    Child = 2,
+    Teen = 3,
+    Adult = 4,
+    Master = 5,
+    Ancient = 6
+};
+
+/**
+ * @brief Class that holds all state information for the pet
  */
 class PetState {
 public:
     /**
-     * @brief Evolution levels for the pet
-     */
-    enum class EvolutionLevel : uint8_t {
-        Egg = 0,
-        Baby = 1,
-        Child = 2,
-        Teen = 3,
-        Adult = 4,
-        Master = 5,
-        Ancient = 6
-    };
-    
-    /**
-     * @brief Constructor
+     * @brief Default constructor
      */
     PetState() noexcept;
     
     /**
-     * @brief Check if a saved state file exists
-     * @return true if a state file exists, false otherwise
-     */
-    bool saveFileExists() const noexcept;
-    
-    /**
-     * @brief Initialize a new pet with default values
+     * @brief Initialize the pet with default values
      */
     void initialize() noexcept;
     
     /**
-     * @brief Initialize a new pet with a specific name
-     * @param name The name for the new pet
+     * @brief Initialize the pet with a given name
+     * @param name The name for the pet
      */
     void initialize(std::string_view name) noexcept;
     
     /**
-     * @brief Load pet state from file
-     * @return true if loaded successfully, false otherwise
+     * @brief Load the pet state from file
+     * @return True if loaded successfully, false otherwise
      */
     bool load() noexcept;
     
     /**
-     * @brief Save pet state to file
-     * @return true if saved successfully, false otherwise
+     * @brief Save the pet state to file
+     * @return True if saved successfully, false otherwise
      */
     bool save() const noexcept;
+    
+    /**
+     * @brief Check if a save file exists
+     * @return True if a save file exists, false otherwise
+     */
+    bool saveFileExists() const noexcept;
     
     /**
      * @brief Get the pet's name
      * @return The pet's name
      */
-    const std::string& getName() const noexcept { return m_name; }
+    std::string_view getName() const noexcept {
+        return m_name;
+    }
     
     /**
      * @brief Set the pet's name
      * @param name The new name for the pet
      */
-    void setName(std::string_view name) noexcept { m_name = name; }
+    void setName(std::string_view name) noexcept {
+        m_name = name;
+    }
     
     /**
      * @brief Get the pet's evolution level
      * @return The current evolution level
      */
-    EvolutionLevel getEvolutionLevel() const noexcept { return m_evolutionLevel; }
+    EvolutionLevel getEvolutionLevel() const noexcept {
+        return m_evolutionLevel;
+    }
     
     /**
-     * @brief Get the pet's XP
-     * @return The current XP
+     * @brief Get the pet's experience points
+     * @return The current XP amount
      */
-    uint32_t getXP() const noexcept { return m_xp; }
+    uint32_t getXP() const noexcept {
+        return m_xp;
+    }
     
     /**
-     * @brief Get the XP required for the next evolution level
-     * @return The XP required for the next level
-     */
-    uint32_t getXPForNextLevel() const noexcept;
-    
-    /**
-     * @brief Add XP to the pet
+     * @brief Add experience points to the pet
      * @param amount The amount of XP to add
-     * @return true if the pet evolved, false otherwise
+     * @return True if this caused an evolution, false otherwise
      */
     bool addXP(uint32_t amount) noexcept;
     
     /**
-     * @brief Get the pet's hunger level
-     * @return The current hunger level (0-100)
+     * @brief Get required XP for next evolution level
+     * @return The XP amount needed for the next evolution, or 0 if at max level
      */
-    float getHunger() const noexcept { return m_hunger; }
+    uint32_t getXPForNextLevel() const noexcept;
     
     /**
-     * @brief Increase the pet's hunger level
-     * @param amount The amount to increase (capped at 100)
+     * @brief Get the maximum stat value for the current evolution level
+     * @return The maximum value for stats at the current level
+     */
+    float getMaxStatValue() const noexcept;
+    
+    /**
+     * @brief Get the pet's current hunger value
+     * @return The current hunger value (raw)
+     */
+    float getHunger() const noexcept {
+        return m_hunger;
+    }
+    
+    /**
+     * @brief Get the pet's hunger as a percentage of maximum
+     * @return The hunger percentage (0.0-100.0)
+     */
+    float getHungerPercent() const noexcept;
+    
+    /**
+     * @brief Get the pet's current happiness value
+     * @return The current happiness value (raw)
+     */
+    float getHappiness() const noexcept {
+        return m_happiness;
+    }
+    
+    /**
+     * @brief Get the pet's happiness as a percentage of maximum
+     * @return The happiness percentage (0.0-100.0)
+     */
+    float getHappinessPercent() const noexcept;
+    
+    /**
+     * @brief Get the pet's current energy value
+     * @return The current energy value (raw)
+     */
+    float getEnergy() const noexcept {
+        return m_energy;
+    }
+    
+    /**
+     * @brief Get the pet's energy as a percentage of maximum
+     * @return The energy percentage (0.0-100.0)
+     */
+    float getEnergyPercent() const noexcept;
+    
+    /**
+     * @brief Increase the pet's hunger
+     * @param amount Amount to increase (may be capped at maximum)
      */
     void increaseHunger(float amount) noexcept;
     
     /**
-     * @brief Decrease the pet's hunger level
-     * @param amount The amount to decrease (capped at 0)
+     * @brief Decrease the pet's hunger
+     * @param amount Amount to decrease (will not go below zero)
      */
     void decreaseHunger(float amount) noexcept;
     
     /**
-     * @brief Get the pet's happiness level
-     * @return The current happiness level (0-100)
-     */
-    float getHappiness() const noexcept { return m_happiness; }
-    
-    /**
-     * @brief Increase the pet's happiness level
-     * @param amount The amount to increase (capped at 100)
+     * @brief Increase the pet's happiness
+     * @param amount Amount to increase (may be capped at maximum)
      */
     void increaseHappiness(float amount) noexcept;
     
     /**
-     * @brief Decrease the pet's happiness level
-     * @param amount The amount to decrease (capped at 0)
+     * @brief Decrease the pet's happiness
+     * @param amount Amount to decrease (will not go below zero)
      */
     void decreaseHappiness(float amount) noexcept;
     
     /**
-     * @brief Get the pet's energy level
-     * @return The current energy level (0-100)
-     */
-    float getEnergy() const noexcept { return m_energy; }
-    
-    /**
-     * @brief Increase the pet's energy level
-     * @param amount The amount to increase (capped at 100)
+     * @brief Increase the pet's energy
+     * @param amount Amount to increase (may be capped at maximum)
      */
     void increaseEnergy(float amount) noexcept;
     
     /**
-     * @brief Decrease the pet's energy level
-     * @param amount The amount to decrease (capped at 0)
+     * @brief Decrease the pet's energy
+     * @param amount Amount to decrease (will not go below zero)
      */
     void decreaseEnergy(float amount) noexcept;
     
     /**
-     * @brief Get the last interaction time
-     * @return The time of the last interaction
+     * @brief Get the time of last interaction
+     * @return Time point of the last interaction
      */
-    std::chrono::system_clock::time_point getLastInteractionTime() const noexcept { return m_lastInteractionTime; }
+    std::chrono::system_clock::time_point getLastInteractionTime() const noexcept {
+        return m_lastInteractionTime;
+    }
     
     /**
      * @brief Update the last interaction time to now
@@ -168,80 +205,60 @@ public:
     
     /**
      * @brief Get the pet's birth date
-     * @return The time of the pet's creation
+     * @return Birth date time point
      */
-    std::chrono::system_clock::time_point getBirthDate() const noexcept { return m_birthDate; }
+    std::chrono::system_clock::time_point getBirthDate() const noexcept {
+        return m_birthDate;
+    }
     
     /**
-     * @brief Get the pet's ASCII art representation
-     * @return ASCII art string for the current evolution level
+     * @brief Get the ASCII art representation of the pet
+     * @return ASCII art string
      */
     std::string_view getAsciiArt() const noexcept;
     
     /**
-     * @brief Get the description of the pet based on its evolution level
-     * @return Description string
+     * @brief Get a description of the current evolution level
+     * @return Level description
      */
     std::string_view getDescription() const noexcept;
     
     /**
-     * @brief Get a more detailed status description of the pet
-     * @return Detailed status description string
+     * @brief Get a description of the pet's current status
+     * @return Status description based on current stats
      */
     std::string_view getStatusDescription() const noexcept;
     
     /**
-     * @brief Get the achievement system
-     * @return Reference to the achievement system
+     * @brief Get achievement system reference
+     * @return Reference to the pet's achievement system
      */
-    AchievementSystem& getAchievementSystem() noexcept { return m_achievementSystem; }
+    AchievementSystem& getAchievementSystem() noexcept {
+        return m_achievementSystem;
+    }
     
     /**
-     * @brief Get the achievement system (const version)
-     * @return Const reference to the achievement system
+     * @brief Get const achievement system reference
+     * @return Const reference to the pet's achievement system
      */
-    const AchievementSystem& getAchievementSystem() const noexcept { return m_achievementSystem; }
+    const AchievementSystem& getAchievementSystem() const noexcept {
+        return m_achievementSystem;
+    }
     
-    /**
-     * @brief Prevent copying
-     */
-    PetState(const PetState&) = delete;
-    PetState& operator=(const PetState&) = delete;
-
-    /**
-     * @brief Allow moving
-     */
-    PetState(PetState&&) noexcept = default;
-    PetState& operator=(PetState&&) noexcept = default;
-
-    /**
-     * @brief Destructor
-     */
-    ~PetState() = default;
-
 private:
     /**
-     * @brief Get the path to the state file
-     * @return Path to the state file
+     * @brief Get the file path for save data
+     * @return Path to the save file
      */
     std::filesystem::path getStateFilePath() const noexcept;
     
-    // Basic pet properties
     std::string m_name;
     EvolutionLevel m_evolutionLevel;
     uint32_t m_xp;
-    
-    // Pet stats (0-100)
     float m_hunger;
     float m_happiness;
     float m_energy;
-    
-    // Last interaction time
     std::chrono::system_clock::time_point m_lastInteractionTime;
-    
-    // Birth date (creation time)
     std::chrono::system_clock::time_point m_birthDate;
-    
-    // Achievement system
     AchievementSystem m_achievementSystem;
 };

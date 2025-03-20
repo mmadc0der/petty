@@ -24,6 +24,32 @@ namespace GameConfig {
     constexpr Preset CURRENT_PRESET = Preset::Default;
 
     /**
+     * @brief Maximum stat values based on evolution level
+     */
+    namespace MaxStats {
+        // Egg (Level 0)
+        constexpr float EGG_MAX_STAT = 60.0f;
+        
+        // Baby (Level 1)
+        constexpr float BABY_MAX_STAT = 60.0f;
+        
+        // Child (Level 2)
+        constexpr float CHILD_MAX_STAT = 60.0f;
+        
+        // Teen (Level 3)
+        constexpr float TEEN_MAX_STAT = 80.0f;
+        
+        // Adult (Level 4)
+        constexpr float ADULT_MAX_STAT = 80.0f;
+        
+        // Master (Level 5)
+        constexpr float MASTER_MAX_STAT = 100.0f;
+        
+        // Ancient (Level 6)
+        constexpr float ANCIENT_MAX_STAT = 120.0f;
+    }
+
+    /**
      * @brief Time threshold constants
      */
     namespace Time {
@@ -76,20 +102,26 @@ namespace GameConfig {
      * @brief Stat warning thresholds
      */
     namespace Warnings {
-        // Threshold for "very hungry" warning
-        constexpr float HUNGER_WARNING_THRESHOLD = 20.0f;
+        // Thresholds for warnings (absolute values)
+        constexpr float HUNGER_WARNING_THRESHOLD = 12.0f;
+        constexpr float HAPPINESS_WARNING_THRESHOLD = 12.0f;
         
-        // Threshold for "sad and needs attention" warning
-        constexpr float HAPPINESS_WARNING_THRESHOLD = 20.0f;
+        // Percentage versions kept for compatibility with existing code
+        constexpr float HUNGER_WARNING_THRESHOLD_PERCENT = 0.2f;
+        constexpr float HAPPINESS_WARNING_THRESHOLD_PERCENT = 0.2f;
     }
 
     /**
      * @brief Initial pet stats
      */
     namespace InitialStats {
-        constexpr float INITIAL_HUNGER = 50.0f;
-        constexpr float INITIAL_HAPPINESS = 50.0f;
-        constexpr float INITIAL_ENERGY = 50.0f;
+        // Initial values as absolute values
+        constexpr float INITIAL_HUNGER = 30.0f;
+        constexpr float INITIAL_HAPPINESS = 30.0f;
+        constexpr float INITIAL_ENERGY = 30.0f;
+        
+        // Percentage version kept for compatibility
+        constexpr float INITIAL_STAT_PERCENT = 0.5f;
     }
 
     /**
@@ -100,25 +132,25 @@ namespace GameConfig {
         namespace Feeding {
             // Default preset values
             namespace Default {
-                constexpr float HUNGER_INCREASE = 20.0f;
+                constexpr float HUNGER_INCREASE = 12.0f;
                 constexpr uint32_t XP_GAIN = 10;
             }
             
             // Easy preset values
             namespace Easy {
-                constexpr float HUNGER_INCREASE = 25.0f;
+                constexpr float HUNGER_INCREASE = 15.0f;
                 constexpr uint32_t XP_GAIN = 15;
             }
             
             // Hard preset values
             namespace Hard {
-                constexpr float HUNGER_INCREASE = 15.0f;
+                constexpr float HUNGER_INCREASE = 9.0f;
                 constexpr uint32_t XP_GAIN = 8;
             }
             
             // Realistic preset values
             namespace Realistic {
-                constexpr float HUNGER_INCREASE = 18.0f;
+                constexpr float HUNGER_INCREASE = 10.8f;
                 constexpr uint32_t XP_GAIN = 10;
             }
         }
@@ -127,31 +159,57 @@ namespace GameConfig {
         namespace Playing {
             // Default preset values
             namespace Default {
-                constexpr float HAPPINESS_INCREASE = 15.0f;
-                constexpr float ENERGY_DECREASE = 10.0f;
+                constexpr float HAPPINESS_INCREASE = 12.0f;
+                constexpr float ENERGY_DECREASE = 8.0f;
                 constexpr uint32_t XP_GAIN = 15;
             }
             
             // Easy preset values
             namespace Easy {
-                constexpr float HAPPINESS_INCREASE = 20.0f;
-                constexpr float ENERGY_DECREASE = 8.0f;
+                constexpr float HAPPINESS_INCREASE = 16.0f;
+                constexpr float ENERGY_DECREASE = 6.4f;
                 constexpr uint32_t XP_GAIN = 20;
             }
             
             // Hard preset values
             namespace Hard {
-                constexpr float HAPPINESS_INCREASE = 12.0f;
-                constexpr float ENERGY_DECREASE = 15.0f;
+                constexpr float HAPPINESS_INCREASE = 9.6f;
+                constexpr float ENERGY_DECREASE = 12.0f;
                 constexpr uint32_t XP_GAIN = 12;
             }
             
             // Realistic preset values
             namespace Realistic {
-                constexpr float HAPPINESS_INCREASE = 15.0f;
-                constexpr float ENERGY_DECREASE = 12.0f;
+                constexpr float HAPPINESS_INCREASE = 12.0f;
+                constexpr float ENERGY_DECREASE = 9.6f;
                 constexpr uint32_t XP_GAIN = 14;
             }
+        }
+    }
+
+    /**
+     * @brief Get the maximum stat value based on evolution level
+     * @param evolutionLevel The current evolution level of the pet
+     * @return Maximum stat value for the given evolution level
+     */
+    constexpr float getMaxStatForEvolutionLevel(uint8_t evolutionLevel) {
+        switch (evolutionLevel) {
+            case 0: // Egg
+                return MaxStats::EGG_MAX_STAT;
+            case 1: // Baby
+                return MaxStats::BABY_MAX_STAT;
+            case 2: // Child
+                return MaxStats::CHILD_MAX_STAT;
+            case 3: // Teen
+                return MaxStats::TEEN_MAX_STAT;
+            case 4: // Adult
+                return MaxStats::ADULT_MAX_STAT;
+            case 5: // Master
+                return MaxStats::MASTER_MAX_STAT;
+            case 6: // Ancient
+                return MaxStats::ANCIENT_MAX_STAT;
+            default:
+                return MaxStats::EGG_MAX_STAT;
         }
     }
 
@@ -262,7 +320,7 @@ namespace GameConfig {
                 return Interactions::Playing::Default::HAPPINESS_INCREASE;
         }
     }
-    
+
     /**
      * @brief Get the current playing energy decrease based on the selected preset
      * @return Energy decrease amount

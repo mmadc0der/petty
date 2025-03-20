@@ -30,25 +30,25 @@ void DisplayManager::displayPetHeader() const noexcept {
     std::cout << "Evolution: ";
     
     switch (m_petState.getEvolutionLevel()) {
-        case PetState::EvolutionLevel::Egg:
+        case EvolutionLevel::Egg:
             std::cout << "Egg (Level 0)";
             break;
-        case PetState::EvolutionLevel::Baby:
+        case EvolutionLevel::Baby:
             std::cout << "Baby (Level 1)";
             break;
-        case PetState::EvolutionLevel::Child:
+        case EvolutionLevel::Child:
             std::cout << "Child (Level 2)";
             break;
-        case PetState::EvolutionLevel::Teen:
+        case EvolutionLevel::Teen:
             std::cout << "Teen (Level 3)";
             break;
-        case PetState::EvolutionLevel::Adult:
+        case EvolutionLevel::Adult:
             std::cout << "Adult (Level 4)";
             break;
-        case PetState::EvolutionLevel::Master:
+        case EvolutionLevel::Master:
             std::cout << "Master (Level 5)";
             break;
-        case PetState::EvolutionLevel::Ancient:
+        case EvolutionLevel::Ancient:
             std::cout << "Ancient";
             break;
     }
@@ -57,14 +57,20 @@ void DisplayManager::displayPetHeader() const noexcept {
     // Add pet description - using the more detailed status description instead of the basic description
     std::cout << "Status: " << m_petState.getStatusDescription() << std::endl;
     
-    // Statistics right after the description
+    // Get maximum stat value for current evolution level
+    float maxStatValue = m_petState.getMaxStatValue();
+    
+    // Statistics right after the description - display absolute values not percentages
     std::cout << "\nStats:" << std::endl;
-    std::cout << "  Hunger: " << static_cast<int>(std::floor(m_petState.getHunger())) << "%" << std::endl;
-    std::cout << "  Happiness: " << static_cast<int>(std::floor(m_petState.getHappiness())) << "%" << std::endl;
-    std::cout << "  Energy: " << static_cast<int>(std::floor(m_petState.getEnergy())) << "%" << std::endl;
+    std::cout << "  Hunger: " << static_cast<int>(std::floor(m_petState.getHunger())) << " / "
+              << static_cast<int>(maxStatValue) << std::endl;
+    std::cout << "  Happiness: " << static_cast<int>(std::floor(m_petState.getHappiness())) << " / "
+              << static_cast<int>(maxStatValue) << std::endl;
+    std::cout << "  Energy: " << static_cast<int>(std::floor(m_petState.getEnergy())) << " / "
+              << static_cast<int>(maxStatValue) << std::endl;
     std::cout << "  XP: " << m_petState.getXP() << std::endl;
     
-    if (m_petState.getEvolutionLevel() != PetState::EvolutionLevel::Ancient) {
+    if (m_petState.getEvolutionLevel() != EvolutionLevel::Ancient) {
         std::cout << " / " << m_petState.getXPForNextLevel() << " for next level";
     }
     std::cout << std::endl;
@@ -75,21 +81,21 @@ void DisplayManager::displayPetHeader() const noexcept {
     std::cout << "Achievements: " << unlockedAchievements.size() << "/" << static_cast<int>(AchievementType::Count) << " unlocked" << std::endl << std::endl;
 }
 
-std::string_view DisplayManager::getEvolutionLevelName(PetState::EvolutionLevel level) const noexcept {
+std::string_view DisplayManager::getEvolutionLevelName(EvolutionLevel level) const noexcept {
     switch (level) {
-        case PetState::EvolutionLevel::Egg:
+        case EvolutionLevel::Egg:
             return "Egg";
-        case PetState::EvolutionLevel::Baby:
+        case EvolutionLevel::Baby:
             return "Baby";
-        case PetState::EvolutionLevel::Child:
+        case EvolutionLevel::Child:
             return "Child";
-        case PetState::EvolutionLevel::Teen:
+        case EvolutionLevel::Teen:
             return "Teen";
-        case PetState::EvolutionLevel::Adult:
+        case EvolutionLevel::Adult:
             return "Adult";
-        case PetState::EvolutionLevel::Master:
+        case EvolutionLevel::Master:
             return "Master";
-        case PetState::EvolutionLevel::Ancient:
+        case EvolutionLevel::Ancient:
             return "Ancient";
         default:
             return "Unknown";

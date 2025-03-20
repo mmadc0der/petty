@@ -136,9 +136,11 @@ bool PetState::load() noexcept {
             file.read(reinterpret_cast<char*>(&happiness), sizeof(happiness));
             file.read(reinterpret_cast<char*>(&energy), sizeof(energy));
             
-            m_hunger = static_cast<float>(hunger);
-            m_happiness = static_cast<float>(happiness);
-            m_energy = static_cast<float>(energy);
+            // Convert from percentage (0-100) to actual values based on max
+            float maxStat = getMaxStatValue();
+            m_hunger = (static_cast<float>(hunger) / 100.0f) * maxStat;
+            m_happiness = (static_cast<float>(happiness) / 100.0f) * maxStat;
+            m_energy = (static_cast<float>(energy) / 100.0f) * maxStat;
         } else {
             // For future versions, read stats as float directly
             file.read(reinterpret_cast<char*>(&m_hunger), sizeof(m_hunger));
@@ -199,18 +201,21 @@ bool PetState::save() const noexcept {
         }
         
         // File format version
-        const uint8_t version = 3; // Increased version to 3 to support float stats
+        // Version 1: Basic pet state
+        // Version 2: Added birth date and achievements
+        // Version 3: Changed stats from uint8_t to float
+        // Version 4: Changed stats from percentage to actual values
+        const uint8_t version = 4;
         file.write(reinterpret_cast<const char*>(&version), sizeof(version));
         
         // Write name
-        uint16_t nameLength = static_cast<uint16_t>(m_name.length());
+        uint16_t nameLength = static_cast<uint16_t>(m_name.size());
         file.write(reinterpret_cast<const char*>(&nameLength), sizeof(nameLength));
         file.write(m_name.c_str(), nameLength);
         
         // Write basic stats
         uint8_t evolutionLevel = static_cast<uint8_t>(m_evolutionLevel);
         file.write(reinterpret_cast<const char*>(&evolutionLevel), sizeof(evolutionLevel));
-        
         file.write(reinterpret_cast<const char*>(&m_xp), sizeof(m_xp));
         
         // Write stats as float
@@ -218,21 +223,24 @@ bool PetState::save() const noexcept {
         file.write(reinterpret_cast<const char*>(&m_happiness), sizeof(m_happiness));
         file.write(reinterpret_cast<const char*>(&m_energy), sizeof(m_energy));
         
-        // Write last interaction time as seconds since epoch
-        uint64_t lastInteractionSeconds = 
-            std::chrono::duration_cast<std::chrono::seconds>(
+        // Write last interaction time
+        auto lastInteractionSeconds = std::chrono::duration_cast<std::chrono::seconds>(
                 m_lastInteractionTime.time_since_epoch()).count();
         file.write(reinterpret_cast<const char*>(&lastInteractionSeconds), sizeof(lastInteractionSeconds));
         
-        // Write birth date as seconds since epoch
-        uint64_t birthDateSeconds = 
-            std::chrono::duration_cast<std::chrono::seconds>(
+        // Write birth date
+        auto birthDateSeconds = std::chrono::duration_cast<std::chrono::seconds>(
                 m_birthDate.time_since_epoch()).count();
         file.write(reinterpret_cast<const char*>(&birthDateSeconds), sizeof(birthDateSeconds));
         
         // Write achievement progress
         if (!m_achievementSystem.save(file)) {
             std::cerr << "Failed to save achievement progress" << std::endl;
+            return false;
+        }
+        
+        if (!file) {
+            std::cerr << "Error writing state file: " << statePath.string() << std::endl;
             return false;
         }
         
@@ -244,31 +252,32 @@ bool PetState::save() const noexcept {
 }
 
 bool PetState::addXP(uint32_t amount) noexcept {
+    uint32_t oldXP = m_xp;
+    EvolutionLevel oldLevel = m_evolutionLevel;
+    
     m_xp += amount;
     
     // Check if we should evolve
     uint32_t xpForNextLevel = getXPForNextLevel();
     
-    if (m_xp >= xpForNextLevel && m_evolutionLevel < EvolutionLevel::Ancient) {
+    if (xpForNextLevel > 0 && m_xp >= xpForNextLevel) {
+        // Evolve to the next level
         m_evolutionLevel = static_cast<EvolutionLevel>(static_cast<uint8_t>(m_evolutionLevel) + 1);
         
-        // Unlock evolution achievement
+        // Unlock achievement for evolution
         m_achievementSystem.unlock(AchievementType::Evolution);
         
-        // Unlock master achievement if reached max level
+        // Special achievements for reaching Master and Ancient levels
         if (m_evolutionLevel == EvolutionLevel::Master) {
             m_achievementSystem.unlock(AchievementType::Master);
-        }
-        
-        // Unlock eternal achievement if reached ancient level
-        if (m_evolutionLevel == EvolutionLevel::Ancient) {
+        } else if (m_evolutionLevel == EvolutionLevel::Ancient) {
             m_achievementSystem.unlock(AchievementType::Eternal);
         }
         
-        return true; // Evolved
+        return true;
     }
     
-    return false; // No evolution
+    return false;
 }
 
 uint32_t PetState::getXPForNextLevel() const noexcept {
@@ -296,13 +305,13 @@ void PetState::increaseHunger(float amount) noexcept {
     float oldHunger = m_hunger;
     m_hunger += amount;
     
-    // Cap at 100
-    if (m_hunger > 100.0f) {
-        m_hunger = 100.0f;
+    // Cap at max
+    if (m_hunger > getMaxStatValue()) {
+        m_hunger = getMaxStatValue();
     }
     
-    // Check for achievement
-    if (oldHunger < 99.0f && m_hunger >= 100.0f) {
+    // Check for achievement - based on percentage
+    if ((oldHunger / getMaxStatValue()) < 0.99f && (m_hunger / getMaxStatValue()) >= 0.99f) {
         m_achievementSystem.unlock(AchievementType::WellFed);
     }
 }
@@ -315,13 +324,13 @@ void PetState::increaseHappiness(float amount) noexcept {
     float oldHappiness = m_happiness;
     m_happiness += amount;
     
-    // Cap at 100
-    if (m_happiness > 100.0f) {
-        m_happiness = 100.0f;
+    // Cap at max
+    if (m_happiness > getMaxStatValue()) {
+        m_happiness = getMaxStatValue();
     }
     
-    // Check for achievement
-    if (oldHappiness < 99.0f && m_happiness >= 100.0f) {
+    // Check for achievement - based on percentage
+    if ((oldHappiness / getMaxStatValue()) < 0.99f && (m_happiness / getMaxStatValue()) >= 0.99f) {
         m_achievementSystem.unlock(AchievementType::HappyDays);
     }
 }
@@ -334,13 +343,13 @@ void PetState::increaseEnergy(float amount) noexcept {
     float oldEnergy = m_energy;
     m_energy += amount;
     
-    // Cap at 100
-    if (m_energy > 100.0f) {
-        m_energy = 100.0f;
+    // Cap at max
+    if (m_energy > getMaxStatValue()) {
+        m_energy = getMaxStatValue();
     }
     
-    // Check for achievement
-    if (oldEnergy < 99.0f && m_energy >= 100.0f) {
+    // Check for achievement - based on percentage
+    if ((oldEnergy / getMaxStatValue()) < 0.99f && (m_energy / getMaxStatValue()) >= 0.99f) {
         m_achievementSystem.unlock(AchievementType::FullyRested);
     }
 }
@@ -351,6 +360,10 @@ void PetState::decreaseEnergy(float amount) noexcept {
 
 void PetState::updateInteractionTime() noexcept {
     m_lastInteractionTime = std::chrono::system_clock::now();
+}
+
+float PetState::getMaxStatValue() const noexcept {
+    return GameConfig::getMaxStatForEvolutionLevel(static_cast<uint8_t>(m_evolutionLevel));
 }
 
 std::string_view PetState::getAsciiArt() const noexcept {
