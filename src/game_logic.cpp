@@ -55,9 +55,9 @@ void GameLogic::showStatus() const {
     }
     std::cout << std::endl;
     
-    std::cout << "  Hunger: " << static_cast<int>(m_petState.getHunger()) << "%" << std::endl;
-    std::cout << "  Happiness: " << static_cast<int>(m_petState.getHappiness()) << "%" << std::endl;
-    std::cout << "  Energy: " << static_cast<int>(m_petState.getEnergy()) << "%" << std::endl;
+    std::cout << "  Hunger: " << static_cast<int>(std::floor(m_petState.getHunger())) << "%" << std::endl;
+    std::cout << "  Happiness: " << static_cast<int>(std::floor(m_petState.getHappiness())) << "%" << std::endl;
+    std::cout << "  Energy: " << static_cast<int>(std::floor(m_petState.getEnergy())) << "%" << std::endl;
     
     // Calculate current time
     auto now = std::chrono::system_clock::now();
@@ -172,7 +172,7 @@ void GameLogic::feedPet() {
     displayNewlyUnlockedAchievements();
     
     // Show current hunger level
-    std::cout << "Hunger: " << static_cast<int>(m_petState.getHunger()) << "%" << std::endl;
+    std::cout << "Hunger: " << static_cast<int>(std::floor(m_petState.getHunger())) << "%" << std::endl;
     std::cout << "XP: " << m_petState.getXP();
     if (m_petState.getEvolutionLevel() != PetState::EvolutionLevel::Master) {
         std::cout << " / " << m_petState.getXPForNextLevel() << " for next level";
@@ -211,8 +211,8 @@ void GameLogic::playWithPet() {
     displayNewlyUnlockedAchievements();
     
     // Show current stats
-    std::cout << "Happiness: " << static_cast<int>(m_petState.getHappiness()) << "%" << std::endl;
-    std::cout << "Energy: " << static_cast<int>(m_petState.getEnergy()) << "%" << std::endl;
+    std::cout << "Happiness: " << static_cast<int>(std::floor(m_petState.getHappiness())) << "%" << std::endl;
+    std::cout << "Energy: " << static_cast<int>(std::floor(m_petState.getEnergy())) << "%" << std::endl;
     std::cout << "XP: " << m_petState.getXP();
     if (m_petState.getEvolutionLevel() != PetState::EvolutionLevel::Master) {
         std::cout << " / " << m_petState.getXPForNextLevel() << " for next level";
@@ -310,22 +310,19 @@ std::optional<std::string> GameLogic::applyTimeEffects() {
     // Calculate hours passed
     double hoursPassed = std::chrono::duration<double, std::ratio<3600, 1>>(duration).count();
     
-    if (hoursPassed < 0.1) {
-        // Less than 6 minutes, no significant effects
+    if (hoursPassed < 0.01) {  
+        // Less than 36 seconds, no significant effects
         return std::nullopt;
     }
     
     // Apply effects based on time passed
-    // For each hour, decrease hunger, happiness, and energy
-    uint8_t hungerDecrease = static_cast<uint8_t>(std::min(5.0 * hoursPassed, 100.0));
-    uint8_t happinessDecrease = static_cast<uint8_t>(std::min(3.0 * hoursPassed, 100.0));
+    // For each hour, decrease hunger, happiness, and increase energy
+    float hungerDecrease = static_cast<float>(std::min(5.0 * hoursPassed, 100.0));
+    float happinessDecrease = static_cast<float>(std::min(3.0 * hoursPassed, 100.0));
     
-    // Only increase energy if at least 1 hour has passed
-    uint8_t energyIncrease = 0;
-    if (hoursPassed >= 1.0) {
-        energyIncrease = static_cast<uint8_t>(std::min(2.0 * hoursPassed, 100.0));
-        m_petState.increaseEnergy(energyIncrease); // Pet rests while away
-    }
+    // Always increase energy proportional to time passed (10 energy per hour)
+    float energyIncrease = static_cast<float>(std::min(10.0 * hoursPassed, 100.0));
+    m_petState.increaseEnergy(energyIncrease); // Pet rests while away
     
     m_petState.decreaseHunger(hungerDecrease);
     m_petState.decreaseHappiness(happinessDecrease);
@@ -344,12 +341,12 @@ std::optional<std::string> GameLogic::applyTimeEffects() {
         
         std::string message = ss.str();
         
-        if (m_petState.getHunger() < 20) {
+        if (m_petState.getHunger() < 20.0f) {
             message += "\nYour pet is very hungry!";
         }
         
-        if (m_petState.getHappiness() < 20) {
-            message += "\nYour pet is feeling lonely and sad.";
+        if (m_petState.getHappiness() < 20.0f) {
+            message += "\nYour pet is sad and needs attention!";
         }
         
         return message;
@@ -440,7 +437,7 @@ void GameLogic::showAchievements() const {
     if (std::find(unlockedAchievements.begin(), unlockedAchievements.end(), AchievementType::WellFed) 
         == unlockedAchievements.end()) {
         hasLockedAchievements = true;
-        auto currentHunger = static_cast<int>(m_petState.getHunger());
+        auto currentHunger = static_cast<int>(std::floor(m_petState.getHunger()));
         std::cout << "  - " << AchievementSystem::getName(AchievementType::WellFed) 
                   << ": " << AchievementSystem::getDescription(AchievementType::WellFed) 
                   << " (" << currentHunger << "/100)" << std::endl;
@@ -450,7 +447,7 @@ void GameLogic::showAchievements() const {
     if (std::find(unlockedAchievements.begin(), unlockedAchievements.end(), AchievementType::HappyDays) 
         == unlockedAchievements.end()) {
         hasLockedAchievements = true;
-        auto currentHappiness = static_cast<int>(m_petState.getHappiness());
+        auto currentHappiness = static_cast<int>(std::floor(m_petState.getHappiness()));
         std::cout << "  - " << AchievementSystem::getName(AchievementType::HappyDays) 
                   << ": " << AchievementSystem::getDescription(AchievementType::HappyDays) 
                   << " (" << currentHappiness << "/100)" << std::endl;
@@ -460,7 +457,7 @@ void GameLogic::showAchievements() const {
     if (std::find(unlockedAchievements.begin(), unlockedAchievements.end(), AchievementType::FullyRested) 
         == unlockedAchievements.end()) {
         hasLockedAchievements = true;
-        auto currentEnergy = static_cast<int>(m_petState.getEnergy());
+        auto currentEnergy = static_cast<int>(std::floor(m_petState.getEnergy()));
         std::cout << "  - " << AchievementSystem::getName(AchievementType::FullyRested) 
                   << ": " << AchievementSystem::getDescription(AchievementType::FullyRested) 
                   << " (" << currentEnergy << "/100)" << std::endl;

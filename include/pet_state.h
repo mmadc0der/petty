@@ -92,55 +92,55 @@ public:
      * @brief Get the pet's hunger level
      * @return The current hunger level (0-100)
      */
-    uint8_t getHunger() const { return m_hunger; }
+    float getHunger() const { return m_hunger; }
     
     /**
      * @brief Increase the pet's hunger level
      * @param amount The amount to increase (capped at 100)
      */
-    void increaseHunger(uint8_t amount);
+    void increaseHunger(float amount);
     
     /**
      * @brief Decrease the pet's hunger level
      * @param amount The amount to decrease (capped at 0)
      */
-    void decreaseHunger(uint8_t amount);
+    void decreaseHunger(float amount);
     
     /**
      * @brief Get the pet's happiness level
      * @return The current happiness level (0-100)
      */
-    uint8_t getHappiness() const { return m_happiness; }
+    float getHappiness() const { return m_happiness; }
     
     /**
      * @brief Increase the pet's happiness level
      * @param amount The amount to increase (capped at 100)
      */
-    void increaseHappiness(uint8_t amount);
+    void increaseHappiness(float amount);
     
     /**
      * @brief Decrease the pet's happiness level
      * @param amount The amount to decrease (capped at 0)
      */
-    void decreaseHappiness(uint8_t amount);
+    void decreaseHappiness(float amount);
     
     /**
      * @brief Get the pet's energy level
      * @return The current energy level (0-100)
      */
-    uint8_t getEnergy() const { return m_energy; }
+    float getEnergy() const { return m_energy; }
     
     /**
      * @brief Increase the pet's energy level
      * @param amount The amount to increase (capped at 100)
      */
-    void increaseEnergy(uint8_t amount);
+    void increaseEnergy(float amount);
     
     /**
      * @brief Decrease the pet's energy level
      * @param amount The amount to decrease (capped at 0)
      */
-    void decreaseEnergy(uint8_t amount);
+    void decreaseEnergy(float amount);
     
     /**
      * @brief Get the last interaction time
@@ -213,9 +213,9 @@ private:
     uint32_t m_xp;
     
     // Pet stats (0-100)
-    uint8_t m_hunger;
-    uint8_t m_happiness;
-    uint8_t m_energy;
+    float m_hunger;
+    float m_happiness;
+    float m_energy;
     
     // Last interaction time
     std::chrono::system_clock::time_point m_lastInteractionTime;

@@ -19,9 +19,9 @@ PetState::PetState()
     : m_name("Unnamed Pet")
     , m_evolutionLevel(EvolutionLevel::Egg)
     , m_xp(0)
-    , m_hunger(50)
-    , m_happiness(50)
-    , m_energy(50)
+    , m_hunger(50.0f)
+    , m_happiness(50.0f)
+    , m_energy(50.0f)
     , m_lastInteractionTime(std::chrono::system_clock::now())
     , m_birthDate(std::chrono::system_clock::now())
 {
@@ -31,9 +31,9 @@ void PetState::initialize() {
     m_name = "Unnamed Pet";
     m_evolutionLevel = EvolutionLevel::Egg;
     m_xp = 0;
-    m_hunger = 50;
-    m_happiness = 50;
-    m_energy = 50;
+    m_hunger = 50.0f;
+    m_happiness = 50.0f;
+    m_energy = 50.0f;
     m_lastInteractionTime = std::chrono::system_clock::now();
     m_birthDate = std::chrono::system_clock::now();
     
@@ -77,76 +77,82 @@ bool PetState::load() {
     try {
         auto statePath = getStateFilePath();
         
-        // Check if file exists
         if (!std::filesystem::exists(statePath)) {
-            return false;
+            std::cout << "Creating a new pet!" << std::endl;
+            initialize();
+            return true;
         }
         
         std::ifstream file(statePath, std::ios::binary);
         if (!file) {
-            std::cerr << "Failed to open state file for reading: " << statePath.string() << std::endl;
+            std::cerr << "Failed to open state file: " << statePath.string() << std::endl;
             return false;
         }
         
-        // File format version
-        uint8_t version;
+        // Read file format version
+        uint8_t version = 0;
         file.read(reinterpret_cast<char*>(&version), sizeof(version));
         
-        // Check version compatibility
-        if (version > 2) {
+        if (version > 3) {
             std::cerr << "Unsupported state file version: " << static_cast<int>(version) << std::endl;
             return false;
         }
         
-        // Read name length and name
-        uint16_t nameLength;
+        // Read name
+        uint16_t nameLength = 0;
         file.read(reinterpret_cast<char*>(&nameLength), sizeof(nameLength));
+        
         m_name.resize(nameLength);
         file.read(&m_name[0], nameLength);
         
         // Read basic stats
-        uint8_t evolutionLevel;
+        uint8_t evolutionLevel = 0;
         file.read(reinterpret_cast<char*>(&evolutionLevel), sizeof(evolutionLevel));
         m_evolutionLevel = static_cast<EvolutionLevel>(evolutionLevel);
         
         file.read(reinterpret_cast<char*>(&m_xp), sizeof(m_xp));
-        file.read(reinterpret_cast<char*>(&m_hunger), sizeof(m_hunger));
-        file.read(reinterpret_cast<char*>(&m_happiness), sizeof(m_happiness));
-        file.read(reinterpret_cast<char*>(&m_energy), sizeof(m_energy));
         
-        // Read last interaction time as seconds since epoch
-        uint64_t lastInteractionSeconds;
+        // For version 1 and 2, read stats as uint8_t and convert to float
+        if (version <= 2) {
+            uint8_t hunger = 0, happiness = 0, energy = 0;
+            file.read(reinterpret_cast<char*>(&hunger), sizeof(hunger));
+            file.read(reinterpret_cast<char*>(&happiness), sizeof(happiness));
+            file.read(reinterpret_cast<char*>(&energy), sizeof(energy));
+            
+            m_hunger = static_cast<float>(hunger);
+            m_happiness = static_cast<float>(happiness);
+            m_energy = static_cast<float>(energy);
+        } else {
+            // For future versions, read stats as float directly
+            file.read(reinterpret_cast<char*>(&m_hunger), sizeof(m_hunger));
+            file.read(reinterpret_cast<char*>(&m_happiness), sizeof(m_happiness));
+            file.read(reinterpret_cast<char*>(&m_energy), sizeof(m_energy));
+        }
+        
+        // Read last interaction time
+        uint64_t lastInteractionSeconds = 0;
         file.read(reinterpret_cast<char*>(&lastInteractionSeconds), sizeof(lastInteractionSeconds));
-        m_lastInteractionTime = std::chrono::system_clock::from_time_t(static_cast<std::time_t>(lastInteractionSeconds));
         
-        // For older versions, set birth date to last interaction time
-        m_birthDate = m_lastInteractionTime;
+        m_lastInteractionTime = std::chrono::system_clock::time_point(
+            std::chrono::seconds(lastInteractionSeconds));
         
-        // Read achievements bitset
-        uint64_t achievementBits;
-        file.read(reinterpret_cast<char*>(&achievementBits), sizeof(achievementBits));
-        m_achievementSystem.setUnlockedBits(achievementBits);
+        // Read birth date if version >= 2
+        if (version >= 2) {
+            uint64_t birthDateSeconds = 0;
+            file.read(reinterpret_cast<char*>(&birthDateSeconds), sizeof(birthDateSeconds));
+            
+            m_birthDate = std::chrono::system_clock::time_point(
+                std::chrono::seconds(birthDateSeconds));
+        } else {
+            // For older versions, set birth date to now
+            m_birthDate = std::chrono::system_clock::now();
+        }
         
         // Read achievement progress if version >= 2
         if (version >= 2) {
-            for (size_t i = 0; i < static_cast<size_t>(AchievementType::Count); ++i) {
-                uint32_t progress;
-                file.read(reinterpret_cast<char*>(&progress), sizeof(progress));
-                
-                // Only set progress if achievement is not already unlocked
-                AchievementType type = static_cast<AchievementType>(i);
-                if (!m_achievementSystem.isUnlocked(type) && progress > 0) {
-                    m_achievementSystem.setProgress(type, progress);
-                }
-            }
-            
-            // Read birth date if we have enough data in the file
-            if (file && !file.eof()) {
-                uint64_t birthDateSeconds;
-                file.read(reinterpret_cast<char*>(&birthDateSeconds), sizeof(birthDateSeconds));
-                if (file) {
-                    m_birthDate = std::chrono::system_clock::from_time_t(static_cast<std::time_t>(birthDateSeconds));
-                }
+            if (!m_achievementSystem.load(file)) {
+                std::cerr << "Failed to load achievement progress" << std::endl;
+                return false;
             }
         }
         
@@ -176,7 +182,7 @@ bool PetState::save() const {
         }
         
         // File format version
-        const uint8_t version = 2; // Increased version to 2 to support achievement progress
+        const uint8_t version = 3; // Increased version to 3 to support float stats
         file.write(reinterpret_cast<const char*>(&version), sizeof(version));
         
         // Write name
@@ -189,6 +195,8 @@ bool PetState::save() const {
         file.write(reinterpret_cast<const char*>(&evolutionLevel), sizeof(evolutionLevel));
         
         file.write(reinterpret_cast<const char*>(&m_xp), sizeof(m_xp));
+        
+        // Write stats as float
         file.write(reinterpret_cast<const char*>(&m_hunger), sizeof(m_hunger));
         file.write(reinterpret_cast<const char*>(&m_happiness), sizeof(m_happiness));
         file.write(reinterpret_cast<const char*>(&m_energy), sizeof(m_energy));
@@ -199,24 +207,15 @@ bool PetState::save() const {
                 m_lastInteractionTime.time_since_epoch()).count();
         file.write(reinterpret_cast<const char*>(&lastInteractionSeconds), sizeof(lastInteractionSeconds));
         
-        // Write achievements bitset
-        uint64_t achievementBits = m_achievementSystem.getUnlockedBits();
-        file.write(reinterpret_cast<const char*>(&achievementBits), sizeof(achievementBits));
-        
-        // Write achievement progress for each achievement
-        for (size_t i = 0; i < static_cast<size_t>(AchievementType::Count); ++i) {
-            uint32_t progress = m_achievementSystem.getProgress(static_cast<AchievementType>(i));
-            file.write(reinterpret_cast<const char*>(&progress), sizeof(progress));
-        }
-        
         // Write birth date as seconds since epoch
         uint64_t birthDateSeconds = 
             std::chrono::duration_cast<std::chrono::seconds>(
                 m_birthDate.time_since_epoch()).count();
         file.write(reinterpret_cast<const char*>(&birthDateSeconds), sizeof(birthDateSeconds));
         
-        if (!file) {
-            std::cerr << "Error writing state file: " << statePath.string() << std::endl;
+        // Write achievement progress
+        if (!m_achievementSystem.save(file)) {
+            std::cerr << "Failed to save achievement progress" << std::endl;
             return false;
         }
         
@@ -250,46 +249,43 @@ bool PetState::addXP(uint32_t amount) {
     return false; // No evolution
 }
 
-void PetState::increaseHunger(uint8_t amount) {
-    uint8_t oldHunger = m_hunger;
-    m_hunger = std::min<uint8_t>(100, m_hunger + amount);
-    
+void PetState::increaseHunger(float amount) {
+    float oldHunger = m_hunger;
+    m_hunger = std::min<float>(100.0f, m_hunger + amount);
     // Check for achievement
-    if (oldHunger < 100 && m_hunger == 100) {
+    if (oldHunger < 99.0f && m_hunger >= 100.0f) {
         m_achievementSystem.unlock(AchievementType::WellFed);
     }
 }
 
-void PetState::decreaseHunger(uint8_t amount) {
-    m_hunger = (m_hunger > amount) ? m_hunger - amount : 0;
+void PetState::decreaseHunger(float amount) {
+    m_hunger = std::max<float>(0.0f, m_hunger - amount);
 }
 
-void PetState::increaseHappiness(uint8_t amount) {
-    uint8_t oldHappiness = m_happiness;
-    m_happiness = std::min<uint8_t>(100, m_happiness + amount);
-    
+void PetState::increaseHappiness(float amount) {
+    float oldHappiness = m_happiness;
+    m_happiness = std::min<float>(100.0f, m_happiness + amount);
     // Check for achievement
-    if (oldHappiness < 100 && m_happiness == 100) {
+    if (oldHappiness < 99.0f && m_happiness >= 100.0f) {
         m_achievementSystem.unlock(AchievementType::HappyDays);
     }
 }
 
-void PetState::decreaseHappiness(uint8_t amount) {
-    m_happiness = (m_happiness > amount) ? m_happiness - amount : 0;
+void PetState::decreaseHappiness(float amount) {
+    m_happiness = std::max<float>(0.0f, m_happiness - amount);
 }
 
-void PetState::increaseEnergy(uint8_t amount) {
-    uint8_t oldEnergy = m_energy;
-    m_energy = std::min<uint8_t>(100, m_energy + amount);
-    
+void PetState::increaseEnergy(float amount) {
+    float oldEnergy = m_energy;
+    m_energy = std::min<float>(100.0f, m_energy + amount);
     // Check for achievement
-    if (oldEnergy < 100 && m_energy == 100) {
+    if (oldEnergy < 99.0f && m_energy >= 100.0f) {
         m_achievementSystem.unlock(AchievementType::FullyRested);
     }
 }
 
-void PetState::decreaseEnergy(uint8_t amount) {
-    m_energy = (m_energy > amount) ? m_energy - amount : 0;
+void PetState::decreaseEnergy(float amount) {
+    m_energy = std::max<float>(0.0f, m_energy - amount);
 }
 
 void PetState::updateInteractionTime() {

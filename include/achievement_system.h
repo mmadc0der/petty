@@ -6,6 +6,7 @@
 #include <vector>
 #include <bitset>
 #include <optional>
+#include <fstream>
 
 /**
  * @brief Enumeration of all possible achievements in the game
@@ -144,6 +145,20 @@ public:
      * @return The total required progress
      */
     static uint32_t getRequiredProgress(AchievementType type);
+    
+    /**
+     * @brief Save achievement data to a file stream
+     * @param file The output file stream
+     * @return true if saved successfully, false otherwise
+     */
+    bool save(std::ofstream& file) const;
+    
+    /**
+     * @brief Load achievement data from a file stream
+     * @param file The input file stream
+     * @return true if loaded successfully, false otherwise
+     */
+    bool load(std::ifstream& file);
     
 private:
     // Bitset to store unlocked achievements (64 bits allows for future expansion)
