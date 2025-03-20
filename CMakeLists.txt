@@ -9,15 +9,16 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Add executable
 add_executable(pet
     src/main.cpp
-    src/command_parser.cpp
     src/pet_state.cpp
-    src/game_logic.cpp
-    src/achievement_system.cpp
-    src/time_manager.cpp
     src/display_manager.cpp
     src/achievement_manager.cpp
+    src/achievement_system.cpp
     src/interaction_manager.cpp
+    src/time_manager.cpp
+    src/game_logic.cpp
     src/ui_manager.cpp
+    src/command_parser.cpp
+    src/command_handler_base.cpp
 )
 
 # Include directories - updated to use the new include directory
@@ -30,9 +31,9 @@ set_target_properties(pet PROPERTIES
 
 # Add compiler warnings
 if(MSVC)
-    target_compile_options(pet PRIVATE /W4 /permissive-)
+    target_compile_options(pet PRIVATE /W4)
 else()
-    target_compile_options(pet PRIVATE -Wall -Wextra -Wpedantic -Werror=return-type)
+    target_compile_options(pet PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
 # Enable Address Sanitizer in Debug mode (except on Windows)

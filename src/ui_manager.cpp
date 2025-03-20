@@ -1,8 +1,10 @@
 #include "../include/ui_manager.h"
+#include "../include/game_logic.h"
 #include <iostream>
 #include <algorithm>
 #include <sstream>
 #include <chrono>
+#include <memory> // Added for std::weak_ptr
 
 UIManager::UIManager(
     PetState& petState,
@@ -16,6 +18,24 @@ UIManager::UIManager(
     , m_interactionManager(interactionManager)
     , m_timeManager(timeManager)
 {
+    // Initialize command handlers
+    initializeCommandHandlers();
+}
+
+void UIManager::setGameLogic(std::shared_ptr<GameLogic> gameLogic) {
+    m_gameLogic = gameLogic; // Save weak_ptr
+}
+
+void UIManager::initializeCommandHandlers() {
+    // Call initialization from base class
+    CommandHandlerBase::initializeCommandHandlers();
+    
+    // Add specific handlers for UIManager
+    // Add help command for interactive mode
+    m_commandHandlers["help"] = [this](GameLogic& gameLogic) -> void {
+        // Call showHelp method
+        this->showHelp();
+    };
 }
 
 void UIManager::runInteractiveMode() {
@@ -89,31 +109,10 @@ bool UIManager::processCommand(const std::vector<std::string>& args) {
         return false;
     }
     
-    std::string command = args[0];
-    std::transform(command.begin(), command.end(), command.begin(), 
-                   [](unsigned char c) { return std::tolower(c); });
-    
-    if (command == "status") {
-        m_interactionManager.showStatus();
-        return true;
-    } else if (command == "feed") {
-        m_interactionManager.feedPet();
-        return true;
-    } else if (command == "play") {
-        m_interactionManager.playWithPet();
-        return true;
-    } else if (command == "evolve") {
-        m_interactionManager.showEvolutionProgress();
-        return true;
-    } else if (command == "achievements") {
-        m_achievementManager.showAllAchievements();
-        return true;
-    } else if (command == "new") {
-        m_interactionManager.createNewPet();
-        return true;
-    } else if (command == "help") {
-        showHelp();
-        return true;
+    // Check if GameLogic object still exists
+    if (auto gameLogic = m_gameLogic.lock()) {
+        // If object exists, use base implementation for command processing
+        return CommandHandlerBase::processCommand(args, *gameLogic);
     }
     
     return false;
@@ -123,12 +122,12 @@ void UIManager::showHelp() const {
     std::cout << "Virtual Pet Application\n"
               << "----------------------\n"
               << "Commands:\n"
-              << "  new          - Create a new pet\n"
               << "  status       - Show pet status\n"
               << "  feed         - Feed your pet\n"
               << "  play         - Play with your pet\n"
               << "  evolve       - Show evolution progress\n"
               << "  achievements - Show all achievements and progress\n"
+              << "  new          - Create a new pet\n"
               << "  help         - Show this help message\n"
               << "  clear        - Clear the screen\n"
               << "  exit         - Exit the application\n"

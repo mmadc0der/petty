@@ -1,5 +1,6 @@
 #pragma once
 
+#include "command_handler_base.h"
 #include <string>
 #include <vector>
 #include <string_view>
@@ -9,37 +10,35 @@
 
 // Forward declaration
 class GameLogic;
-class UIManager;
 
 /**
  * @brief Handles command line argument parsing and dispatching
  * 
  * Uses modern C++ features like string_view and std::function for command handling
  */
-class CommandParser {
+class CommandParser : public CommandHandlerBase {
 public:
     /**
      * @brief Constructor
      */
     CommandParser();
-
-    /**
-     * @brief Displays help information about available commands
-     */
-    void showHelp() const;
-
-    /**
-     * @brief Processes the command line arguments and executes the corresponding action
-     * @param args Vector of command line arguments
-     * @param gameLogic Reference to the game logic handler
-     * @return true if the command was recognized and processed, false otherwise
-     */
-    bool processCommand(const std::vector<std::string>& args, GameLogic& gameLogic) const;
-
-private:
-    // Command handler function type
-    using CommandHandler = std::function<void(GameLogic&)>;
     
-    // Map of command names to handler functions
-    std::unordered_map<std::string_view, CommandHandler> m_commandHandlers;
+    /**
+     * @brief Process command line arguments
+     * @param args Vector of command line arguments
+     * @param gameLogic Reference to game logic
+     * @return True if the command was processed successfully
+     */
+    bool processCommand(const std::vector<std::string>& args, GameLogic& gameLogic) const override;
+    
+    /**
+     * @brief Show help information
+     */
+    void showHelp() const override;
+    
+private:
+    /**
+     * @brief Initialize command handlers
+     */
+    void initializeCommandHandlers() override;
 };

@@ -5,13 +5,16 @@
 #include "achievement_manager.h"
 #include "interaction_manager.h"
 #include "time_manager.h"
+#include "command_handler_base.h"
+#include "game_logic.h"
 #include <string>
 #include <vector>
+#include <memory>
 
 /**
  * @brief Manages user interface and command processing
  */
-class UIManager {
+class UIManager : public CommandHandlerBase {
 public:
     /**
      * @brief Constructor
@@ -28,6 +31,12 @@ public:
         InteractionManager& interactionManager,
         TimeManager& timeManager
     );
+
+    /**
+     * @brief Set game logic reference for command processing
+     * @param gameLogic Shared pointer к объекту game logic
+     */
+    void setGameLogic(std::shared_ptr<GameLogic> gameLogic);
 
     /**
      * @brief Run interactive mode
@@ -47,9 +56,17 @@ public:
     /**
      * @brief Show help information
      */
-    void showHelp() const;
+    void showHelp() const override;
 
 private:
+    /**
+     * @brief Initialize command handlers
+     */
+    void initializeCommandHandlers() override;
+
+    // Weak pointer to object game logic (does not own it)
+    std::weak_ptr<GameLogic> m_gameLogic;
+    
     // Reference to the pet state
     PetState& m_petState;
     
