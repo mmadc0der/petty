@@ -22,6 +22,10 @@ CommandParser::CommandParser() {
     m_commandHandlers["evolve"] = [](GameLogic& gameLogic) -> void {
         gameLogic.showEvolutionProgress();
     };
+    
+    m_commandHandlers["achievements"] = [](GameLogic& gameLogic) -> void {
+        gameLogic.showAchievements();
+    };
 }
 
 void CommandParser::showHelp() const {
@@ -29,11 +33,12 @@ void CommandParser::showHelp() const {
               << "----------------------\n"
               << "Usage: pet [command]\n\n"
               << "Commands:\n"
-              << "  status    - Show pet status\n"
-              << "  feed      - Feed your pet\n"
-              << "  play      - Play with your pet\n"
-              << "  evolve    - Show evolution progress\n"
-              << "  help      - Show this help message\n"
+              << "  status       - Show pet status\n"
+              << "  feed         - Feed your pet\n"
+              << "  play         - Play with your pet\n"
+              << "  evolve       - Show evolution progress\n"
+              << "  achievements - Show all achievements and progress\n"
+              << "  help         - Show this help message\n"
               << std::endl;
 }
 

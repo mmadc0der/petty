@@ -117,12 +117,43 @@ public:
      */
     void setUnlockedBits(uint64_t bits) { m_unlockedAchievements = std::bitset<64>(bits); }
     
+    /**
+     * @brief Track progress for achievements that require multiple steps
+     * @param type The achievement type
+     * @param amount The amount of progress to increment (default is 1)
+     */
+    void incrementProgress(AchievementType type, uint32_t amount = 1);
+    
+    /**
+     * @brief Set progress directly for an achievement
+     * @param type The achievement type
+     * @param progress The progress to set
+     */
+    void setProgress(AchievementType type, uint32_t progress);
+    
+    /**
+     * @brief Get progress for an achievement
+     * @param type The achievement type
+     * @return The current progress
+     */
+    uint32_t getProgress(AchievementType type) const;
+    
+    /**
+     * @brief Get total required progress for an achievement
+     * @param type The achievement type
+     * @return The total required progress
+     */
+    static uint32_t getRequiredProgress(AchievementType type);
+    
 private:
     // Bitset to store unlocked achievements (64 bits allows for future expansion)
     std::bitset<64> m_unlockedAchievements;
     
     // Bitset to track newly unlocked achievements since last check
     std::bitset<64> m_newlyUnlockedAchievements;
+    
+    // Progress tracking for achievements that require multiple steps
+    std::array<uint32_t, static_cast<size_t>(AchievementType::Count)> m_progress;
     
     // Static array of achievement names
     static constexpr std::array<std::string_view, static_cast<size_t>(AchievementType::Count)> ACHIEVEMENT_NAMES = {
@@ -150,5 +181,19 @@ private:
         "Interact with your pet for 7 consecutive days",
         "Try all available commands",
         "Keep your pet alive for 30 days"
+    };
+    
+    // Static array of required progress for achievements
+    static constexpr std::array<uint32_t, static_cast<size_t>(AchievementType::Count)> ACHIEVEMENT_REQUIRED_PROGRESS = {
+        1,  // FirstSteps
+        100,  // WellFed
+        100,  // HappyDays
+        100,  // FullyRested
+        1,  // Evolution
+        1,  // Master
+        5,  // Playful
+        7,  // Dedicated
+        1,  // Explorer
+        30  // Survivor
     };
 };

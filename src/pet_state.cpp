@@ -89,7 +89,9 @@ bool PetState::load() {
         // File format version
         uint8_t version;
         file.read(reinterpret_cast<char*>(&version), sizeof(version));
-        if (version != 1) {
+        
+        // Check version compatibility
+        if (version > 2) {
             std::cerr << "Unsupported state file version: " << static_cast<int>(version) << std::endl;
             return false;
         }
@@ -120,6 +122,20 @@ bool PetState::load() {
         file.read(reinterpret_cast<char*>(&achievementBits), sizeof(achievementBits));
         m_achievementSystem.setUnlockedBits(achievementBits);
         
+        // Read achievement progress if version >= 2
+        if (version >= 2) {
+            for (size_t i = 0; i < static_cast<size_t>(AchievementType::Count); ++i) {
+                uint32_t progress;
+                file.read(reinterpret_cast<char*>(&progress), sizeof(progress));
+                
+                // Only set progress if achievement is not already unlocked
+                AchievementType type = static_cast<AchievementType>(i);
+                if (!m_achievementSystem.isUnlocked(type) && progress > 0) {
+                    m_achievementSystem.setProgress(type, progress);
+                }
+            }
+        }
+        
         if (!file) {
             std::cerr << "Error reading state file: " << statePath.string() << std::endl;
             return false;
@@ -146,7 +162,7 @@ bool PetState::save() const {
         }
         
         // File format version
-        const uint8_t version = 1;
+        const uint8_t version = 2; // Increased version to 2 to support achievement progress
         file.write(reinterpret_cast<const char*>(&version), sizeof(version));
         
         // Write name
@@ -172,6 +188,12 @@ bool PetState::save() const {
         // Write achievements bitset
         uint64_t achievementBits = m_achievementSystem.getUnlockedBits();
         file.write(reinterpret_cast<const char*>(&achievementBits), sizeof(achievementBits));
+        
+        // Write achievement progress for each achievement
+        for (size_t i = 0; i < static_cast<size_t>(AchievementType::Count); ++i) {
+            uint32_t progress = m_achievementSystem.getProgress(static_cast<AchievementType>(i));
+            file.write(reinterpret_cast<const char*>(&progress), sizeof(progress));
+        }
         
         if (!file) {
             std::cerr << "Error writing state file: " << statePath.string() << std::endl;

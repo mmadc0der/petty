@@ -2,9 +2,13 @@
 #include <iostream>
 #include <algorithm>
 
-AchievementSystem::AchievementSystem()
-    : m_unlockedAchievements(0), m_newlyUnlockedAchievements(0)
+AchievementSystem::AchievementSystem() 
+    : m_unlockedAchievements(0), 
+      m_newlyUnlockedAchievements(0),
+      m_progress{}
 {
+    // Initialize progress array to zeros
+    std::fill(m_progress.begin(), m_progress.end(), 0);
 }
 
 bool AchievementSystem::isUnlocked(AchievementType type) const {
@@ -82,4 +86,63 @@ void AchievementSystem::clearNewlyUnlocked() {
 void AchievementSystem::setUnlockedBitset(const std::bitset<64>& bitset) {
     m_unlockedAchievements = bitset;
     m_newlyUnlockedAchievements.reset(); // Clear newly unlocked tracking when setting from saved state
+}
+
+void AchievementSystem::incrementProgress(AchievementType type, uint32_t amount) {
+    if (type == AchievementType::Count) {
+        return;
+    }
+    
+    // Don't increment if already unlocked
+    if (isUnlocked(type)) {
+        return;
+    }
+    
+    size_t index = static_cast<size_t>(type);
+    m_progress[index] += amount;
+    
+    // Check if we've reached the required progress
+    if (m_progress[index] >= ACHIEVEMENT_REQUIRED_PROGRESS[index]) {
+        unlock(type);
+    }
+}
+
+void AchievementSystem::setProgress(AchievementType type, uint32_t progress) {
+    if (type == AchievementType::Count) {
+        return;
+    }
+    
+    // Don't set progress if already unlocked
+    if (isUnlocked(type)) {
+        return;
+    }
+    
+    size_t index = static_cast<size_t>(type);
+    m_progress[index] = progress;
+    
+    // Check if we've reached the required progress
+    if (m_progress[index] >= ACHIEVEMENT_REQUIRED_PROGRESS[index]) {
+        unlock(type);
+    }
+}
+
+uint32_t AchievementSystem::getProgress(AchievementType type) const {
+    if (type == AchievementType::Count) {
+        return 0;
+    }
+    
+    // If already unlocked, return the required progress
+    if (isUnlocked(type)) {
+        return ACHIEVEMENT_REQUIRED_PROGRESS[static_cast<size_t>(type)];
+    }
+    
+    return m_progress[static_cast<size_t>(type)];
+}
+
+uint32_t AchievementSystem::getRequiredProgress(AchievementType type) {
+    if (type == AchievementType::Count) {
+        return 0;
+    }
+    
+    return ACHIEVEMENT_REQUIRED_PROGRESS[static_cast<size_t>(type)];
 }

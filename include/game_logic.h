@@ -38,6 +38,11 @@ public:
      */
     void showEvolutionProgress() const;
 
+    /**
+     * @brief Show achievements, including locked ones with progress
+     */
+    void showAchievements() const;
+
 private:
     /**
      * @brief Apply time-based effects to the pet

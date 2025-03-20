@@ -151,12 +151,7 @@ void GameLogic::playWithPet() {
     }
     
     // Track play count for Playful achievement
-    static int playCount = 0;
-    playCount++;
-    
-    if (playCount >= 5) {
-        m_petState.getAchievementSystem().unlock(AchievementType::Playful);
-    }
+    m_petState.getAchievementSystem().incrementProgress(AchievementType::Playful);
     
     // Check for newly unlocked achievements
     displayNewlyUnlockedAchievements();
@@ -270,11 +265,16 @@ std::optional<std::string> GameLogic::applyTimeEffects() {
     // For each hour, decrease hunger, happiness, and energy
     uint8_t hungerDecrease = static_cast<uint8_t>(std::min(5.0 * hoursPassed, 100.0));
     uint8_t happinessDecrease = static_cast<uint8_t>(std::min(3.0 * hoursPassed, 100.0));
-    uint8_t energyIncrease = static_cast<uint8_t>(std::min(2.0 * hoursPassed, 100.0));
+    
+    // Only increase energy if at least 1 hour has passed
+    uint8_t energyIncrease = 0;
+    if (hoursPassed >= 1.0) {
+        energyIncrease = static_cast<uint8_t>(std::min(2.0 * hoursPassed, 100.0));
+        m_petState.increaseEnergy(energyIncrease); // Pet rests while away
+    }
     
     m_petState.decreaseHunger(hungerDecrease);
     m_petState.decreaseHappiness(happinessDecrease);
-    m_petState.increaseEnergy(energyIncrease); // Pet rests while away
     
     // Generate message if significant time has passed
     if (hoursPassed > 1.0) {
@@ -339,4 +339,92 @@ void GameLogic::displayNewlyUnlockedAchievements() {
     }
     
     achievementSystem.clearNewlyUnlocked();
+}
+
+void GameLogic::showAchievements() const {
+    const auto& achievementSystem = m_petState.getAchievementSystem();
+    auto unlockedAchievements = achievementSystem.getUnlockedAchievements();
+    
+    std::cout << "\n===== ACHIEVEMENTS =====\n" << std::endl;
+    
+    // First show locked achievements with progress
+    std::cout << "LOCKED ACHIEVEMENTS:" << std::endl;
+    
+    bool hasLockedAchievements = false;
+    
+    // Check for playful achievement progress
+    if (std::find(unlockedAchievements.begin(), unlockedAchievements.end(), AchievementType::Playful) 
+        == unlockedAchievements.end()) {
+        hasLockedAchievements = true;
+        std::cout << "  - " << AchievementSystem::getName(AchievementType::Playful) 
+                  << ": " << AchievementSystem::getDescription(AchievementType::Playful) 
+                  << " (" << achievementSystem.getProgress(AchievementType::Playful) 
+                  << "/" << AchievementSystem::getRequiredProgress(AchievementType::Playful) << ")" << std::endl;
+    }
+    
+    // Check for evolution achievement progress
+    if (std::find(unlockedAchievements.begin(), unlockedAchievements.end(), AchievementType::Evolution) 
+        == unlockedAchievements.end()) {
+        hasLockedAchievements = true;
+        auto currentLevel = static_cast<int>(m_petState.getEvolutionLevel());
+        std::cout << "  - " << AchievementSystem::getName(AchievementType::Evolution) 
+                  << ": " << AchievementSystem::getDescription(AchievementType::Evolution) 
+                  << " (Level " << currentLevel << "/4)" << std::endl;
+    }
+    
+    // Check for master achievement progress
+    if (std::find(unlockedAchievements.begin(), unlockedAchievements.end(), AchievementType::Master) 
+        == unlockedAchievements.end()) {
+        hasLockedAchievements = true;
+        auto currentLevel = static_cast<int>(m_petState.getEvolutionLevel());
+        std::cout << "  - " << AchievementSystem::getName(AchievementType::Master) 
+                  << ": " << AchievementSystem::getDescription(AchievementType::Master) 
+                  << " (Level " << currentLevel << "/5)" << std::endl;
+    }
+    
+    // Check for hunger-based achievement progress
+    if (std::find(unlockedAchievements.begin(), unlockedAchievements.end(), AchievementType::WellFed) 
+        == unlockedAchievements.end()) {
+        hasLockedAchievements = true;
+        auto currentHunger = static_cast<int>(m_petState.getHunger());
+        std::cout << "  - " << AchievementSystem::getName(AchievementType::WellFed) 
+                  << ": " << AchievementSystem::getDescription(AchievementType::WellFed) 
+                  << " (" << currentHunger << "/100)" << std::endl;
+    }
+    
+    // Check for happiness-based achievement progress
+    if (std::find(unlockedAchievements.begin(), unlockedAchievements.end(), AchievementType::HappyDays) 
+        == unlockedAchievements.end()) {
+        hasLockedAchievements = true;
+        auto currentHappiness = static_cast<int>(m_petState.getHappiness());
+        std::cout << "  - " << AchievementSystem::getName(AchievementType::HappyDays) 
+                  << ": " << AchievementSystem::getDescription(AchievementType::HappyDays) 
+                  << " (" << currentHappiness << "/100)" << std::endl;
+    }
+    
+    // Check for energy-based achievement progress
+    if (std::find(unlockedAchievements.begin(), unlockedAchievements.end(), AchievementType::FullyRested) 
+        == unlockedAchievements.end()) {
+        hasLockedAchievements = true;
+        auto currentEnergy = static_cast<int>(m_petState.getEnergy());
+        std::cout << "  - " << AchievementSystem::getName(AchievementType::FullyRested) 
+                  << ": " << AchievementSystem::getDescription(AchievementType::FullyRested) 
+                  << " (" << currentEnergy << "/100)" << std::endl;
+    }
+    
+    if (!hasLockedAchievements) {
+        std::cout << "  None - You've unlocked all achievements!" << std::endl;
+    }
+    
+    // Then show unlocked achievements
+    std::cout << "\nUNLOCKED ACHIEVEMENTS:" << std::endl;
+    
+    if (unlockedAchievements.empty()) {
+        std::cout << "  None yet. Keep playing!" << std::endl;
+    } else {
+        for (const auto& achievement : unlockedAchievements) {
+            std::cout << "  - " << AchievementSystem::getName(achievement) 
+                      << ": " << AchievementSystem::getDescription(achievement) << std::endl;
+        }
+    }
 }
