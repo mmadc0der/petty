@@ -13,6 +13,11 @@ add_executable(pet
     src/pet_state.cpp
     src/game_logic.cpp
     src/achievement_system.cpp
+    src/time_manager.cpp
+    src/display_manager.cpp
+    src/achievement_manager.cpp
+    src/interaction_manager.cpp
+    src/ui_manager.cpp
 )
 
 # Include directories - updated to use the new include directory

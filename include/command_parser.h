@@ -9,6 +9,7 @@
 
 // Forward declaration
 class GameLogic;
+class UIManager;
 
 /**
  * @brief Handles command line argument parsing and dispatching

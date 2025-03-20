@@ -1,12 +1,17 @@
 #pragma once
 
 #include "pet_state.h"
+#include "display_manager.h"
+#include "achievement_manager.h"
+#include "interaction_manager.h"
+#include "time_manager.h"
+#include "ui_manager.h"
 #include <memory>
 #include <string_view>
 #include <optional>
 
 /**
- * @brief Handles game mechanics and interactions with the pet
+ * @brief Main game logic class that coordinates all managers
  * 
  * Uses modern C++ features like std::optional and std::string_view
  */
@@ -74,35 +79,13 @@ public:
     void displayNewlyUnlockedAchievements();
 
 private:
-    /**
-     * @brief Apply time-based effects to the pet
-     * 
-     * This method calculates how much time has passed since the last interaction
-     * and applies appropriate effects (hunger decrease, etc.)
-     * 
-     * @return Optional string with a message about significant time passing
-     */
-    std::optional<std::string> applyTimeEffects();
-
-    /**
-     * @brief Display a message about the pet's state change
-     * @param message The message to display
-     */
-    void displayMessage(std::string_view message) const;
-
-    /**
-     * @brief Display unlocked achievements
-     * @param newlyUnlocked Whether to only show newly unlocked achievements
-     */
-    void displayAchievements(bool newlyUnlocked = false) const;
-
-    /**
-     * @brief Get the name of the evolution level
-     * @param level The evolution level
-     * @return The name of the evolution level
-     */
-    std::string getEvolutionLevelName(PetState::EvolutionLevel level) const;
-
     // Reference to the pet state
     PetState& m_petState;
+    
+    // Managers
+    std::unique_ptr<DisplayManager> m_displayManager;
+    std::unique_ptr<AchievementManager> m_achievementManager;
+    std::unique_ptr<InteractionManager> m_interactionManager;
+    std::unique_ptr<TimeManager> m_timeManager;
+    std::unique_ptr<UIManager> m_uiManager;
 };
