@@ -126,6 +126,36 @@ void AchievementManager::showAllAchievements() const {
                 << " (" << currentEnergy << "/100)" << std::endl;
     }
     
+    // Check for dedicated achievement progress
+    if (std::find(unlockedAchievements.begin(), unlockedAchievements.end(), AchievementType::Dedicated) 
+        == unlockedAchievements.end()) {
+        hasLockedAchievements = true;
+        std::cout << "  - " << AchievementSystem::getName(AchievementType::Dedicated) 
+                << ": " << AchievementSystem::getDescription(AchievementType::Dedicated) 
+                << " (" << achievementSystem.getProgress(AchievementType::Dedicated) 
+                << "/" << AchievementSystem::getRequiredProgress(AchievementType::Dedicated) << ")" << std::endl;
+    }
+    
+    // Check for explorer achievement progress
+    if (std::find(unlockedAchievements.begin(), unlockedAchievements.end(), AchievementType::Explorer) 
+        == unlockedAchievements.end()) {
+        hasLockedAchievements = true;
+        std::cout << "  - " << AchievementSystem::getName(AchievementType::Explorer) 
+                << ": " << AchievementSystem::getDescription(AchievementType::Explorer) 
+                << " (" << achievementSystem.getProgress(AchievementType::Explorer) 
+                << "/" << AchievementSystem::getRequiredProgress(AchievementType::Explorer) << ")" << std::endl;
+    }
+    
+    // Check for survivor achievement progress
+    if (std::find(unlockedAchievements.begin(), unlockedAchievements.end(), AchievementType::Survivor) 
+        == unlockedAchievements.end()) {
+        hasLockedAchievements = true;
+        std::cout << "  - " << AchievementSystem::getName(AchievementType::Survivor) 
+                << ": " << AchievementSystem::getDescription(AchievementType::Survivor) 
+                << " (" << achievementSystem.getProgress(AchievementType::Survivor) 
+                << "/" << AchievementSystem::getRequiredProgress(AchievementType::Survivor) << ")" << std::endl;
+    }
+    
     if (!hasLockedAchievements) {
         std::cout << "  None - You've unlocked all achievements!" << std::endl;
     }
