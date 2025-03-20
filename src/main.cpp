@@ -22,8 +22,43 @@ int main(int argc, char* argv[]) {
         
         // If no arguments or help command, show usage
         if (args.empty() || (args.size() == 1 && args[0] == "help")) {
-            parser->showHelp();
-            return 0;
+            if (args.empty()) {
+                // No arguments, run interactive mode
+                auto petState = std::make_unique<PetState>();
+                bool loadSuccess = petState->load();
+                
+                // If load failed, ask if user wants to create a new pet
+                if (!loadSuccess) {
+                    std::cout << "Failed to load pet state. Would you like to create a new pet? (yes/no): ";
+                    std::string response;
+                    std::getline(std::cin, response);
+                    
+                    // Convert to lowercase for case-insensitive comparison
+                    std::transform(response.begin(), response.end(), response.begin(), 
+                                  [](unsigned char c) { return std::tolower(c); });
+                    
+                    if (response == "yes" || response == "y") {
+                        auto gameLogic = std::make_unique<GameLogic>(*petState);
+                        gameLogic->createNewPet(true);
+                        // Save the new pet
+                        petState->save();
+                        // Run interactive mode
+                        gameLogic->runInteractiveMode();
+                    } else {
+                        std::cout << "Exiting without creating a new pet." << std::endl;
+                        return 1;
+                    }
+                } else {
+                    // Pet loaded successfully, run interactive mode
+                    auto gameLogic = std::make_unique<GameLogic>(*petState);
+                    gameLogic->runInteractiveMode();
+                }
+                return 0;
+            } else {
+                // Help command
+                parser->showHelp();
+                return 0;
+            }
         }
 
         // Load pet state
@@ -54,9 +89,7 @@ int main(int argc, char* argv[]) {
         }
         
         // Process the command
-        if (args.empty()) {
-            parser->showHelp();
-        } else if (!parser->processCommand(args, *gameLogic)) {
+        if (!parser->processCommand(args, *gameLogic)) {
             std::cerr << "Unknown command. Try 'pet help' for usage information." << std::endl;
             return 1;
         }

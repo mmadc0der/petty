@@ -50,6 +50,29 @@ public:
      */
     bool createNewPet(bool force = false);
 
+    /**
+     * @brief Run interactive mode
+     * 
+     * This method runs an interactive mode where the user can enter commands
+     * directly without restarting the application.
+     */
+    void runInteractiveMode();
+
+    /**
+     * @brief Clear the console screen
+     */
+    void clearScreen() const;
+    
+    /**
+     * @brief Display the pet header (portrait, name, stats)
+     */
+    void displayPetHeader() const;
+
+    /**
+     * @brief Display newly unlocked achievements
+     */
+    void displayNewlyUnlockedAchievements();
+
 private:
     /**
      * @brief Apply time-based effects to the pet
@@ -72,11 +95,6 @@ private:
      * @param newlyUnlocked Whether to only show newly unlocked achievements
      */
     void displayAchievements(bool newlyUnlocked = false) const;
-
-    /**
-     * @brief Display and clear newly unlocked achievements
-     */
-    void displayNewlyUnlockedAchievements();
 
     /**
      * @brief Get the name of the evolution level

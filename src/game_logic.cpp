@@ -1,4 +1,5 @@
 #include "../include/game_logic.h"
+#include "../include/command_parser.h"
 #include <iostream>
 #include <chrono>
 #include <ctime>
@@ -6,6 +7,7 @@
 #include <sstream>
 #include <algorithm>
 #include <format>
+#include <optional>
 
 GameLogic::GameLogic(PetState& petState)
     : m_petState(petState)
@@ -43,7 +45,7 @@ void GameLogic::showStatus() const {
             std::cout << "Master (Level 5)";
             break;
         case PetState::EvolutionLevel::Ancient:
-            std::cout << "Ancient (Level 6)";
+            std::cout << "Ancient";
             break;
     }
     std::cout << std::endl;
@@ -558,5 +560,114 @@ std::string GameLogic::getEvolutionLevelName(PetState::EvolutionLevel level) con
             return "Ancient";
         default:
             return "Unknown";
+    }
+}
+
+void GameLogic::clearScreen() const {
+#ifdef _WIN32
+    system("cls");
+#else
+    system("clear");
+#endif
+}
+
+void GameLogic::displayPetHeader() const {
+    std::cout << m_petState.getAsciiArt() << std::endl;
+    
+    std::cout << "Name: " << m_petState.getName() << std::endl;
+    std::cout << "Evolution: ";
+    
+    switch (m_petState.getEvolutionLevel()) {
+        case PetState::EvolutionLevel::Egg:
+            std::cout << "Egg (Level 0)";
+            break;
+        case PetState::EvolutionLevel::Baby:
+            std::cout << "Baby (Level 1)";
+            break;
+        case PetState::EvolutionLevel::Child:
+            std::cout << "Child (Level 2)";
+            break;
+        case PetState::EvolutionLevel::Teen:
+            std::cout << "Teen (Level 3)";
+            break;
+        case PetState::EvolutionLevel::Adult:
+            std::cout << "Adult (Level 4)";
+            break;
+        case PetState::EvolutionLevel::Master:
+            std::cout << "Master (Level 5)";
+            break;
+        case PetState::EvolutionLevel::Ancient:
+            std::cout << "Ancient";
+            break;
+    }
+    std::cout << std::endl;
+    
+    std::cout << "\nStats:" << std::endl;
+    std::cout << "  Hunger: " << static_cast<int>(std::floor(m_petState.getHunger())) << "%" << std::endl;
+    std::cout << "  Happiness: " << static_cast<int>(std::floor(m_petState.getHappiness())) << "%" << std::endl;
+    std::cout << "  Energy: " << static_cast<int>(std::floor(m_petState.getEnergy())) << "%" << std::endl;
+    std::cout << "  XP: " << m_petState.getXP();
+    
+    if (m_petState.getEvolutionLevel() != PetState::EvolutionLevel::Ancient) {
+        std::cout << " / " << m_petState.getXPForNextLevel() << " for next level";
+    }
+    std::cout << std::endl << std::endl;
+}
+
+void GameLogic::runInteractiveMode() {
+    // Apply time effects first
+    auto message = applyTimeEffects();
+    if (message) {
+        std::cout << *message << std::endl;
+    }
+    
+    // Display newly unlocked achievements
+    displayNewlyUnlockedAchievements();
+    
+    // Clear screen and show pet header
+    clearScreen();
+    displayPetHeader();
+    
+    // Interactive loop
+    std::string command;
+    bool running = true;
+    
+    while (running) {
+        std::cout << " > ";
+        std::getline(std::cin, command);
+        
+        // Convert to lowercase
+        std::string lowerCommand = command;
+        std::transform(lowerCommand.begin(), lowerCommand.end(), lowerCommand.begin(),
+                      [](unsigned char c) { return std::tolower(c); });
+        
+        // Special commands for interactive mode
+        if (lowerCommand == "exit") {
+            running = false;
+        } else if (lowerCommand == "clear") {
+            clearScreen();
+            displayPetHeader();
+        } else {
+            // Parse the command
+            std::vector<std::string> args;
+            std::istringstream iss(command);
+            std::string arg;
+            while (iss >> arg) {
+                args.push_back(arg);
+            }
+            
+            if (!args.empty()) {
+                // Create a command parser and process the command
+                CommandParser parser;
+                if (args[0] == "help") {
+                    parser.showHelp();
+                } else if (!parser.processCommand(args, *this)) {
+                    std::cout << "Unknown command. Type 'help' for usage information." << std::endl;
+                }
+            }
+            
+            // Save the pet state after each command
+            m_petState.save();
+        }
     }
 }
