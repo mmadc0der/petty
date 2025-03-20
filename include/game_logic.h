@@ -78,6 +78,13 @@ private:
      */
     void displayNewlyUnlockedAchievements();
 
+    /**
+     * @brief Get the name of the evolution level
+     * @param level The evolution level
+     * @return The name of the evolution level
+     */
+    std::string getEvolutionLevelName(PetState::EvolutionLevel level) const;
+
     // Reference to the pet state
     PetState& m_petState;
 };

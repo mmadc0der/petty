@@ -155,8 +155,8 @@ void GameLogic::feedPet() {
     
     // Display message
     if (evolved) {
-        std::cout << "Your pet has evolved to " 
-                  << static_cast<int>(m_petState.getEvolutionLevel()) 
+        std::cout << "Your pet " << m_petState.getName() << " has evolved to " 
+                  << getEvolutionLevelName(m_petState.getEvolutionLevel()) 
                   << "!" << std::endl;
         std::cout << m_petState.getAsciiArt() << std::endl;
         std::cout << m_petState.getDescription() << std::endl;
@@ -193,8 +193,8 @@ void GameLogic::playWithPet() {
     
     // Display message
     if (evolved) {
-        std::cout << "Your pet has evolved to " 
-                  << static_cast<int>(m_petState.getEvolutionLevel()) 
+        std::cout << "Your pet " << m_petState.getName() << " has evolved to " 
+                  << getEvolutionLevelName(m_petState.getEvolutionLevel()) 
                   << "!" << std::endl;
         std::cout << m_petState.getAsciiArt() << std::endl;
         std::cout << m_petState.getDescription() << std::endl;
@@ -519,4 +519,23 @@ bool GameLogic::createNewPet(bool force) {
     showStatus();
     
     return true;
+}
+
+std::string GameLogic::getEvolutionLevelName(PetState::EvolutionLevel level) const {
+    switch (level) {
+        case PetState::EvolutionLevel::Egg:
+            return "Egg";
+        case PetState::EvolutionLevel::Baby:
+            return "Baby";
+        case PetState::EvolutionLevel::Child:
+            return "Child";
+        case PetState::EvolutionLevel::Teen:
+            return "Teen";
+        case PetState::EvolutionLevel::Adult:
+            return "Adult";
+        case PetState::EvolutionLevel::Master:
+            return "Master";
+        default:
+            return "Unknown";
+    }
 }
