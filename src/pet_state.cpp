@@ -1,4 +1,5 @@
 #include "../include/pet_state.h"
+#include "../include/game_config.h"
 #include <fstream>
 #include <iostream>
 #include <chrono>
@@ -20,9 +21,9 @@ PetState::PetState() noexcept
     : m_name("Unnamed Pet")
     , m_evolutionLevel(EvolutionLevel::Egg)
     , m_xp(0)
-    , m_hunger(50.0f)
-    , m_happiness(50.0f)
-    , m_energy(50.0f)
+    , m_hunger(GameConfig::InitialStats::INITIAL_HUNGER)
+    , m_happiness(GameConfig::InitialStats::INITIAL_HAPPINESS)
+    , m_energy(GameConfig::InitialStats::INITIAL_ENERGY)
     , m_lastInteractionTime(std::chrono::system_clock::now())
     , m_birthDate(std::chrono::system_clock::now())
 {
@@ -36,9 +37,9 @@ void PetState::initialize(std::string_view name) noexcept {
     m_name = name;
     m_evolutionLevel = EvolutionLevel::Egg;
     m_xp = 0;
-    m_hunger = 50.0f;
-    m_happiness = 50.0f;
-    m_energy = 50.0f;
+    m_hunger = GameConfig::InitialStats::INITIAL_HUNGER;
+    m_happiness = GameConfig::InitialStats::INITIAL_HAPPINESS;
+    m_energy = GameConfig::InitialStats::INITIAL_ENERGY;
     m_lastInteractionTime = std::chrono::system_clock::now();
     m_birthDate = std::chrono::system_clock::now();
     

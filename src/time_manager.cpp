@@ -1,4 +1,5 @@
 #include "../include/time_manager.h"
+#include "../include/game_config.h"
 #include <iostream>
 #include <chrono>
 #include <ctime>
@@ -25,19 +26,18 @@ std::optional<std::string> TimeManager::applyTimeEffects() noexcept {
     double hoursPassed = std::chrono::duration<double, std::ratio<3600, 1>>(duration).count();
     
     // For command-line mode, we need a higher threshold to avoid changes on frequent status checks
-    // 0.05 hours = 3 minutes
-    if (hoursPassed < 0.05) {  
-        // Less than 3 minutes, no significant effects
+    if (hoursPassed < GameConfig::Time::MIN_TIME_THRESHOLD) {  
+        // Less than threshold time, no significant effects
         return std::nullopt;
     }
     
     // Apply effects based on time passed
     // For each hour, decrease hunger, happiness, and increase energy
-    float hungerDecrease = static_cast<float>(std::min(5.0 * hoursPassed, 100.0));
-    float happinessDecrease = static_cast<float>(std::min(3.0 * hoursPassed, 100.0));
+    float hungerDecrease = static_cast<float>(std::min(GameConfig::getHungerDecreaseRate() * hoursPassed, 100.0));
+    float happinessDecrease = static_cast<float>(std::min(GameConfig::getHappinessDecreaseRate() * hoursPassed, 100.0));
     
-    // Always increase energy proportional to time passed (10 energy per hour)
-    float energyIncrease = static_cast<float>(std::min(10.0 * hoursPassed, 100.0));
+    // Always increase energy proportional to time passed
+    float energyIncrease = static_cast<float>(std::min(GameConfig::getEnergyIncreaseRate() * hoursPassed, 100.0));
     m_petState.increaseEnergy(energyIncrease); // Pet rests while away
     
     m_petState.decreaseHunger(hungerDecrease);
@@ -47,7 +47,7 @@ std::optional<std::string> TimeManager::applyTimeEffects() noexcept {
     m_petState.updateInteractionTime();
     
     // Generate message if significant time has passed
-    if (hoursPassed > 1.0) {
+    if (hoursPassed > GameConfig::Time::SIGNIFICANT_TIME_THRESHOLD) {
         std::string message;
         
         if (hoursPassed < 24.0) {
@@ -57,11 +57,11 @@ std::optional<std::string> TimeManager::applyTimeEffects() noexcept {
             message = std::format("{:.1f} days have passed since your last visit.", daysPassed);
         }
         
-        if (m_petState.getHunger() < 20.0f) {
+        if (m_petState.getHunger() < GameConfig::Warnings::HUNGER_WARNING_THRESHOLD) {
             message += "\nYour pet is very hungry!";
         }
         
-        if (m_petState.getHappiness() < 20.0f) {
+        if (m_petState.getHappiness() < GameConfig::Warnings::HAPPINESS_WARNING_THRESHOLD) {
             message += "\nYour pet is sad and needs attention!";
         }
         

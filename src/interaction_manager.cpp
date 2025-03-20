@@ -1,4 +1,5 @@
 #include "../include/interaction_manager.h"
+#include "../include/game_config.h"
 #include <iostream>
 #include <algorithm>
 #include <format>
@@ -18,8 +19,8 @@ void InteractionManager::feedPet() noexcept {
     bool wasFull = (m_petState.getHunger() == 100);
     
     // Increase hunger and add XP
-    m_petState.increaseHunger(20);
-    bool evolved = m_petState.addXP(10);
+    m_petState.increaseHunger(GameConfig::getFeedingHungerIncrease());
+    bool evolved = m_petState.addXP(GameConfig::getFeedingXPGain());
     
     // Update interaction time
     m_petState.updateInteractionTime();
@@ -63,11 +64,11 @@ void InteractionManager::playWithPet() noexcept {
     bool wasMax = (m_petState.getHappiness() == 100);
     
     // Increase happiness and decrease energy
-    m_petState.increaseHappiness(15);
-    m_petState.decreaseEnergy(10);
+    m_petState.increaseHappiness(GameConfig::getPlayingHappinessIncrease());
+    m_petState.decreaseEnergy(GameConfig::getPlayingEnergyDecrease());
     
     // Add XP
-    bool evolved = m_petState.addXP(15);
+    bool evolved = m_petState.addXP(GameConfig::getPlayingXPGain());
     
     // Update interaction time
     m_petState.updateInteractionTime();
