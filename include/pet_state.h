@@ -4,27 +4,22 @@
 #include <vector>
 #include <cstdint>
 #include <filesystem>
-#include <optional>
-#include <memory>
 #include <chrono>
+#include <string_view>
+#include <memory>
+#include "achievement_system.h"
 
 /**
- * @brief Represents an achievement that the pet can earn
- */
-struct Achievement {
-    std::string name;
-    std::string description;
-    bool unlocked;
-};
-
-/**
- * @brief Represents the current state of the pet
+ * @brief Represents the state of the virtual pet
  * 
- * Uses modern C++ features like std::optional, std::chrono, and std::filesystem
+ * Uses modern C++ features like std::chrono for time representation
+ * and std::string_view for better performance
  */
 class PetState {
 public:
-    // Evolution levels
+    /**
+     * @brief Evolution levels for the pet
+     */
     enum class EvolutionLevel : uint8_t {
         Egg = 0,
         Baby = 1,
@@ -33,163 +28,171 @@ public:
         Adult = 4,
         Master = 5
     };
-
-    // Using std::chrono for time representation
-    using TimePoint = std::chrono::system_clock::time_point;
-
+    
+    /**
+     * @brief Constructor
+     */
     PetState();
-    ~PetState() = default;
-
-    // Prevent copying
-    PetState(const PetState&) = delete;
-    PetState& operator=(const PetState&) = delete;
-
-    // Allow moving
-    PetState(PetState&&) noexcept = default;
-    PetState& operator=(PetState&&) noexcept = default;
-
+    
     /**
      * @brief Initialize a new pet with default values
      */
     void initialize();
-
-    /**
-     * @brief Load pet state from file
-     * @return true if loading was successful, false otherwise
-     */
-    bool load();
-
-    /**
-     * @brief Save pet state to file
-     * @return true if saving was successful, false otherwise
-     */
-    bool save() const;
-
-    /**
-     * @brief Get the current evolution level
-     * @return The current evolution level
-     */
-    EvolutionLevel getEvolutionLevel() const { return m_evolutionLevel; }
-
-    /**
-     * @brief Get the current experience points
-     * @return The current XP
-     */
-    uint32_t getXP() const { return m_xp; }
-
-    /**
-     * @brief Get the hunger level (0-100)
-     * @return The current hunger level
-     */
-    uint8_t getHunger() const { return m_hunger; }
-
-    /**
-     * @brief Get the happiness level (0-100)
-     * @return The current happiness level
-     */
-    uint8_t getHappiness() const { return m_happiness; }
-
-    /**
-     * @brief Get the energy level (0-100)
-     * @return The current energy level
-     */
-    uint8_t getEnergy() const { return m_energy; }
-
-    /**
-     * @brief Get the list of achievements
-     * @return Vector of achievements
-     */
-    std::vector<Achievement>& getAchievements() { return m_achievements; }
     
     /**
-     * @brief Get the list of achievements (const version)
-     * @return Vector of achievements
+     * @brief Load pet state from file
+     * @return true if loaded successfully, false otherwise
      */
-    const std::vector<Achievement>& getAchievements() const { return m_achievements; }
-
+    bool load();
+    
     /**
-     * @brief Add experience points and check for evolution
-     * @param amount Amount of XP to add
-     * @return true if the pet evolved, false otherwise
+     * @brief Save pet state to file
+     * @return true if saved successfully, false otherwise
      */
-    bool addXP(uint32_t amount);
-
-    /**
-     * @brief Increase hunger level
-     * @param amount Amount to increase (capped at 100)
-     */
-    void increaseHunger(uint8_t amount);
-
-    /**
-     * @brief Increase happiness level
-     * @param amount Amount to increase (capped at 100)
-     */
-    void increaseHappiness(uint8_t amount);
-
-    /**
-     * @brief Increase energy level
-     * @param amount Amount to increase (capped at 100)
-     */
-    void increaseEnergy(uint8_t amount);
-
-    /**
-     * @brief Decrease hunger level
-     * @param amount Amount to decrease (minimum 0)
-     */
-    void decreaseHunger(uint8_t amount);
-
-    /**
-     * @brief Decrease happiness level
-     * @param amount Amount to decrease (minimum 0)
-     */
-    void decreaseHappiness(uint8_t amount);
-
-    /**
-     * @brief Decrease energy level
-     * @param amount Amount to decrease (minimum 0)
-     */
-    void decreaseEnergy(uint8_t amount);
-
+    bool save() const;
+    
     /**
      * @brief Get the pet's name
      * @return The pet's name
      */
     const std::string& getName() const { return m_name; }
-
+    
     /**
      * @brief Set the pet's name
-     * @param name New name for the pet
+     * @param name The new name for the pet
      */
-    void setName(const std::string& name) { m_name = name; }
-
+    void setName(std::string_view name) { m_name = name; }
+    
+    /**
+     * @brief Get the pet's evolution level
+     * @return The current evolution level
+     */
+    EvolutionLevel getEvolutionLevel() const { return m_evolutionLevel; }
+    
+    /**
+     * @brief Get the pet's XP
+     * @return The current XP
+     */
+    uint32_t getXP() const { return m_xp; }
+    
+    /**
+     * @brief Get the XP required for the next evolution level
+     * @return The XP required for the next level
+     */
+    uint32_t getXPForNextLevel() const;
+    
+    /**
+     * @brief Add XP to the pet
+     * @param amount The amount of XP to add
+     * @return true if the pet evolved, false otherwise
+     */
+    bool addXP(uint32_t amount);
+    
+    /**
+     * @brief Get the pet's hunger level
+     * @return The current hunger level (0-100)
+     */
+    uint8_t getHunger() const { return m_hunger; }
+    
+    /**
+     * @brief Increase the pet's hunger level
+     * @param amount The amount to increase (capped at 100)
+     */
+    void increaseHunger(uint8_t amount);
+    
+    /**
+     * @brief Decrease the pet's hunger level
+     * @param amount The amount to decrease (capped at 0)
+     */
+    void decreaseHunger(uint8_t amount);
+    
+    /**
+     * @brief Get the pet's happiness level
+     * @return The current happiness level (0-100)
+     */
+    uint8_t getHappiness() const { return m_happiness; }
+    
+    /**
+     * @brief Increase the pet's happiness level
+     * @param amount The amount to increase (capped at 100)
+     */
+    void increaseHappiness(uint8_t amount);
+    
+    /**
+     * @brief Decrease the pet's happiness level
+     * @param amount The amount to decrease (capped at 0)
+     */
+    void decreaseHappiness(uint8_t amount);
+    
+    /**
+     * @brief Get the pet's energy level
+     * @return The current energy level (0-100)
+     */
+    uint8_t getEnergy() const { return m_energy; }
+    
+    /**
+     * @brief Increase the pet's energy level
+     * @param amount The amount to increase (capped at 100)
+     */
+    void increaseEnergy(uint8_t amount);
+    
+    /**
+     * @brief Decrease the pet's energy level
+     * @param amount The amount to decrease (capped at 0)
+     */
+    void decreaseEnergy(uint8_t amount);
+    
     /**
      * @brief Get the last interaction time
-     * @return Last interaction time
+     * @return The time of the last interaction
      */
-    TimePoint getLastInteractionTime() const { return m_lastInteractionTime; }
-
+    std::chrono::system_clock::time_point getLastInteractionTime() const { return m_lastInteractionTime; }
+    
     /**
      * @brief Update the last interaction time to now
      */
     void updateInteractionTime();
-
+    
     /**
-     * @brief Get the XP required for the next evolution level
-     * @return XP required for evolution
-     */
-    uint32_t getXPForNextLevel() const;
-
-    /**
-     * @brief Get ASCII art for the current evolution level
-     * @return ASCII art string
+     * @brief Get the pet's ASCII art representation
+     * @return ASCII art string for the current evolution level
      */
     std::string_view getAsciiArt() const;
-
+    
     /**
-     * @brief Get description for the current evolution level
-     * @return Description string
+     * @brief Get the pet's description
+     * @return Description string for the current evolution level
      */
     std::string_view getDescription() const;
+    
+    /**
+     * @brief Get the achievement system
+     * @return Reference to the achievement system
+     */
+    AchievementSystem& getAchievementSystem() { return m_achievementSystem; }
+    
+    /**
+     * @brief Get the achievement system (const version)
+     * @return Const reference to the achievement system
+     */
+    const AchievementSystem& getAchievementSystem() const { return m_achievementSystem; }
+    
+    /**
+     * @brief Prevent copying
+     */
+    PetState(const PetState&) = delete;
+    PetState& operator=(const PetState&) = delete;
+
+    /**
+     * @brief Allow moving
+     */
+    PetState(PetState&&) noexcept = default;
+    PetState& operator=(PetState&&) noexcept = default;
+
+    /**
+     * @brief Destructor
+     */
+    ~PetState() = default;
 
 private:
     /**
@@ -197,19 +200,20 @@ private:
      * @return Path to the state file
      */
     std::filesystem::path getStateFilePath() const;
-
-    /**
-     * @brief Check and unlock achievements based on current state
-     */
-    void checkAchievements();
-
-    // Pet state data
+    
+    // Basic pet properties
     std::string m_name;
     EvolutionLevel m_evolutionLevel;
     uint32_t m_xp;
-    uint8_t m_hunger;     // 0-100, 0 = starving, 100 = full
-    uint8_t m_happiness;  // 0-100, 0 = sad, 100 = very happy
-    uint8_t m_energy;     // 0-100, 0 = exhausted, 100 = energetic
-    TimePoint m_lastInteractionTime;
-    std::vector<Achievement> m_achievements;
+    
+    // Pet stats (0-100)
+    uint8_t m_hunger;
+    uint8_t m_happiness;
+    uint8_t m_energy;
+    
+    // Last interaction time
+    std::chrono::system_clock::time_point m_lastInteractionTime;
+    
+    // Achievement system
+    AchievementSystem m_achievementSystem;
 };

@@ -92,6 +92,13 @@ void GameLogic::feedPet() {
     // Update interaction time
     m_petState.updateInteractionTime();
     
+    // Unlock first steps achievement if first time feeding
+    if (m_petState.getAchievementSystem().unlock(AchievementType::FirstSteps)) {
+        std::cout << "\nAchievement unlocked: " 
+                  << AchievementSystem::getName(AchievementType::FirstSteps) 
+                  << "!" << std::endl;
+    }
+    
     // Display message
     if (evolved) {
         std::cout << "Your pet has evolved to " 
@@ -107,19 +114,8 @@ void GameLogic::feedPet() {
         displayMessage("Your pet enjoys the food and feels less hungry.");
     }
     
-    // Check for first feeding achievement
-    bool firstFeed = false;
-    auto& achievements = m_petState.getAchievements();
-    for (auto& achievement : achievements) {
-        if (achievement.name == "First Steps" && !achievement.unlocked) {
-            achievement.unlocked = true;
-            firstFeed = true;
-        }
-    }
-    
-    if (firstFeed) {
-        std::cout << "\nAchievement unlocked: First Steps!" << std::endl;
-    }
+    // Check for newly unlocked achievements
+    displayNewlyUnlockedAchievements();
     
     // Show current hunger level
     std::cout << "Hunger: " << static_cast<int>(m_petState.getHunger()) << "%" << std::endl;
@@ -136,7 +132,7 @@ void GameLogic::playWithPet() {
     m_petState.decreaseEnergy(10);
     
     // Add XP
-    bool evolved = m_petState.addXP(15);
+    bool evolved = m_petState.addXP(150);
     
     // Update interaction time
     m_petState.updateInteractionTime();
@@ -154,19 +150,16 @@ void GameLogic::playWithPet() {
         displayMessage("Your pet jumps around playfully. It's having fun!");
     }
     
-    // Check for play count achievement (simplified for now)
+    // Track play count for Playful achievement
     static int playCount = 0;
     playCount++;
     
     if (playCount >= 5) {
-        auto& achievements = m_petState.getAchievements();
-        for (auto& achievement : achievements) {
-            if (achievement.name == "Playful" && !achievement.unlocked) {
-                achievement.unlocked = true;
-                std::cout << "\nAchievement unlocked: Playful!" << std::endl;
-            }
-        }
+        m_petState.getAchievementSystem().unlock(AchievementType::Playful);
     }
+    
+    // Check for newly unlocked achievements
+    displayNewlyUnlockedAchievements();
     
     // Show current stats
     std::cout << "Happiness: " << static_cast<int>(m_petState.getHappiness()) << "%" << std::endl;
@@ -316,21 +309,34 @@ void GameLogic::displayMessage(std::string_view message) const {
 }
 
 void GameLogic::displayAchievements(bool newlyUnlocked) const {
-    const auto& achievements = m_petState.getAchievements();
-    bool hasAchievements = false;
+    const auto& achievementSystem = m_petState.getAchievementSystem();
+    auto unlockedAchievements = achievementSystem.getUnlockedAchievements();
     
-    for (const auto& achievement : achievements) {
-        if (achievement.unlocked && (!newlyUnlocked || achievement.unlocked)) {
-            if (!hasAchievements) {
-                std::cout << "\nAchievements:" << std::endl;
-                hasAchievements = true;
-            }
-            
-            std::cout << "  - " << achievement.name << ": " << achievement.description << std::endl;
+    if (unlockedAchievements.empty()) {
+        if (!newlyUnlocked) {
+            std::cout << "\nNo achievements unlocked yet." << std::endl;
+        }
+        return;
+    }
+    
+    std::cout << "\nAchievements:" << std::endl;
+    for (const auto& achievement : unlockedAchievements) {
+        std::cout << "  - " << AchievementSystem::getName(achievement) 
+                  << ": " << AchievementSystem::getDescription(achievement) << std::endl;
+    }
+}
+
+void GameLogic::displayNewlyUnlockedAchievements() {
+    auto& achievementSystem = m_petState.getAchievementSystem();
+    auto newlyUnlocked = achievementSystem.getNewlyUnlockedAchievements();
+    
+    for (const auto& achievement : newlyUnlocked) {
+        if (achievement != AchievementType::FirstSteps) { // First Steps is handled separately
+            std::cout << "\nAchievement unlocked: " 
+                      << AchievementSystem::getName(achievement) 
+                      << "!" << std::endl;
         }
     }
     
-    if (!hasAchievements && !newlyUnlocked) {
-        std::cout << "\nNo achievements unlocked yet." << std::endl;
-    }
+    achievementSystem.clearNewlyUnlocked();
 }

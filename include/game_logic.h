@@ -61,6 +61,11 @@ private:
      */
     void displayAchievements(bool newlyUnlocked = false) const;
 
+    /**
+     * @brief Display and clear newly unlocked achievements
+     */
+    void displayNewlyUnlockedAchievements();
+
     // Reference to the pet state
     PetState& m_petState;
 };

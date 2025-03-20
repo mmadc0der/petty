@@ -24,16 +24,6 @@ PetState::PetState()
     , m_energy(50)
     , m_lastInteractionTime(std::chrono::system_clock::now())
 {
-    // Initialize achievements
-    m_achievements = {
-        {"First Steps", "Feed your pet for the first time", false},
-        {"Playful", "Play with your pet 5 times", false},
-        {"Well Fed", "Reach 100% hunger", false},
-        {"Happy Days", "Reach 100% happiness", false},
-        {"Energetic", "Reach 100% energy", false},
-        {"Evolution", "Evolve your pet to the next stage", false},
-        {"Master", "Reach the final evolution stage", false}
-    };
 }
 
 void PetState::initialize() {
@@ -43,12 +33,9 @@ void PetState::initialize() {
     m_hunger = 50;
     m_happiness = 50;
     m_energy = 50;
-    updateInteractionTime();
+    m_lastInteractionTime = std::chrono::system_clock::now();
     
-    // Reset achievements
-    for (auto& achievement : m_achievements) {
-        achievement.unlocked = false;
-    }
+    // Initialize achievements - all unlocked = false by default
 }
 
 std::filesystem::path PetState::getStateFilePath() const {
@@ -128,31 +115,10 @@ bool PetState::load() {
         file.read(reinterpret_cast<char*>(&lastInteractionSeconds), sizeof(lastInteractionSeconds));
         m_lastInteractionTime = std::chrono::system_clock::from_time_t(static_cast<std::time_t>(lastInteractionSeconds));
         
-        // Read achievements
-        uint8_t achievementCount;
-        file.read(reinterpret_cast<char*>(&achievementCount), sizeof(achievementCount));
-        
-        m_achievements.clear();
-        for (uint8_t i = 0; i < achievementCount; ++i) {
-            Achievement achievement;
-            
-            // Read name
-            uint16_t nameLen;
-            file.read(reinterpret_cast<char*>(&nameLen), sizeof(nameLen));
-            achievement.name.resize(nameLen);
-            file.read(&achievement.name[0], nameLen);
-            
-            // Read description
-            uint16_t descLen;
-            file.read(reinterpret_cast<char*>(&descLen), sizeof(descLen));
-            achievement.description.resize(descLen);
-            file.read(&achievement.description[0], descLen);
-            
-            // Read unlocked status
-            file.read(reinterpret_cast<char*>(&achievement.unlocked), sizeof(achievement.unlocked));
-            
-            m_achievements.push_back(achievement);
-        }
+        // Read achievements bitset
+        uint64_t achievementBits;
+        file.read(reinterpret_cast<char*>(&achievementBits), sizeof(achievementBits));
+        m_achievementSystem.setUnlockedBits(achievementBits);
         
         if (!file) {
             std::cerr << "Error reading state file: " << statePath.string() << std::endl;
@@ -203,24 +169,9 @@ bool PetState::save() const {
                 m_lastInteractionTime.time_since_epoch()).count();
         file.write(reinterpret_cast<const char*>(&lastInteractionSeconds), sizeof(lastInteractionSeconds));
         
-        // Write achievements
-        uint8_t achievementCount = static_cast<uint8_t>(m_achievements.size());
-        file.write(reinterpret_cast<const char*>(&achievementCount), sizeof(achievementCount));
-        
-        for (const auto& achievement : m_achievements) {
-            // Write name
-            uint16_t nameLen = static_cast<uint16_t>(achievement.name.length());
-            file.write(reinterpret_cast<const char*>(&nameLen), sizeof(nameLen));
-            file.write(achievement.name.c_str(), nameLen);
-            
-            // Write description
-            uint16_t descLen = static_cast<uint16_t>(achievement.description.length());
-            file.write(reinterpret_cast<const char*>(&descLen), sizeof(descLen));
-            file.write(achievement.description.c_str(), descLen);
-            
-            // Write unlocked status
-            file.write(reinterpret_cast<const char*>(&achievement.unlocked), sizeof(achievement.unlocked));
-        }
+        // Write achievements bitset
+        uint64_t achievementBits = m_achievementSystem.getUnlockedBits();
+        file.write(reinterpret_cast<const char*>(&achievementBits), sizeof(achievementBits));
         
         if (!file) {
             std::cerr << "Error writing state file: " << statePath.string() << std::endl;
@@ -243,14 +194,12 @@ bool PetState::addXP(uint32_t amount) {
     if (m_xp >= xpForNextLevel && m_evolutionLevel < EvolutionLevel::Master) {
         m_evolutionLevel = static_cast<EvolutionLevel>(static_cast<uint8_t>(m_evolutionLevel) + 1);
         
-        // Unlock achievement if evolved
-        for (auto& achievement : m_achievements) {
-            if (achievement.name == "Evolution") {
-                achievement.unlocked = true;
-            }
-            if (achievement.name == "Master" && m_evolutionLevel == EvolutionLevel::Master) {
-                achievement.unlocked = true;
-            }
+        // Unlock evolution achievement
+        m_achievementSystem.unlock(AchievementType::Evolution);
+        
+        // Unlock master achievement if reached max level
+        if (m_evolutionLevel == EvolutionLevel::Master) {
+            m_achievementSystem.unlock(AchievementType::Master);
         }
         
         return true; // Evolved
@@ -260,44 +209,12 @@ bool PetState::addXP(uint32_t amount) {
 }
 
 void PetState::increaseHunger(uint8_t amount) {
-    uint16_t newValue = static_cast<uint16_t>(m_hunger) + amount;
-    m_hunger = (newValue > 100) ? 100 : static_cast<uint8_t>(newValue);
+    uint8_t oldHunger = m_hunger;
+    m_hunger = std::min<uint8_t>(100, m_hunger + amount);
     
     // Check for achievement
-    if (m_hunger == 100) {
-        for (auto& achievement : m_achievements) {
-            if (achievement.name == "Well Fed") {
-                achievement.unlocked = true;
-            }
-        }
-    }
-}
-
-void PetState::increaseHappiness(uint8_t amount) {
-    uint16_t newValue = static_cast<uint16_t>(m_happiness) + amount;
-    m_happiness = (newValue > 100) ? 100 : static_cast<uint8_t>(newValue);
-    
-    // Check for achievement
-    if (m_happiness == 100) {
-        for (auto& achievement : m_achievements) {
-            if (achievement.name == "Happy Days") {
-                achievement.unlocked = true;
-            }
-        }
-    }
-}
-
-void PetState::increaseEnergy(uint8_t amount) {
-    uint16_t newValue = static_cast<uint16_t>(m_energy) + amount;
-    m_energy = (newValue > 100) ? 100 : static_cast<uint8_t>(newValue);
-    
-    // Check for achievement
-    if (m_energy == 100) {
-        for (auto& achievement : m_achievements) {
-            if (achievement.name == "Energetic") {
-                achievement.unlocked = true;
-            }
-        }
+    if (oldHunger < 100 && m_hunger == 100) {
+        m_achievementSystem.unlock(AchievementType::WellFed);
     }
 }
 
@@ -305,8 +222,28 @@ void PetState::decreaseHunger(uint8_t amount) {
     m_hunger = (m_hunger > amount) ? m_hunger - amount : 0;
 }
 
+void PetState::increaseHappiness(uint8_t amount) {
+    uint8_t oldHappiness = m_happiness;
+    m_happiness = std::min<uint8_t>(100, m_happiness + amount);
+    
+    // Check for achievement
+    if (oldHappiness < 100 && m_happiness == 100) {
+        m_achievementSystem.unlock(AchievementType::HappyDays);
+    }
+}
+
 void PetState::decreaseHappiness(uint8_t amount) {
     m_happiness = (m_happiness > amount) ? m_happiness - amount : 0;
+}
+
+void PetState::increaseEnergy(uint8_t amount) {
+    uint8_t oldEnergy = m_energy;
+    m_energy = std::min<uint8_t>(100, m_energy + amount);
+    
+    // Check for achievement
+    if (oldEnergy < 100 && m_energy == 100) {
+        m_achievementSystem.unlock(AchievementType::FullyRested);
+    }
 }
 
 void PetState::decreaseEnergy(uint8_t amount) {
@@ -419,9 +356,4 @@ std::string_view PetState::getDescription() const {
             static const std::string unknown = "Unknown evolution level";
             return unknown;
     }
-}
-
-void PetState::checkAchievements() {
-    // This method can be expanded to check for more complex achievements
-    // Currently, most achievements are checked in their respective methods
 }

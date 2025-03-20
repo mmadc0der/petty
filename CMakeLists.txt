@@ -12,6 +12,7 @@ add_executable(pet
     src/command_parser.cpp
     src/pet_state.cpp
     src/game_logic.cpp
+    src/achievement_system.cpp
 )
 
 # Include directories - updated to use the new include directory
