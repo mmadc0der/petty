@@ -428,3 +428,34 @@ std::string_view PetState::getDescription() const {
             return unknown;
     }
 }
+
+std::string_view PetState::getStatusDescription() const {
+    // More detailed and organic status descriptions for each evolution stage
+    static const std::string eggStatus = "A mysterious egg. It seems to be moving slightly...";
+    static const std::string babyStatus = "A tiny, adorable creature has hatched! It looks at you with curious eyes.";
+    static const std::string childStatus = "Your pet is growing and developing. It's very curious and playful, and enjoys your attention.";
+    static const std::string teenStatus = "The teenage period is a time of change. Your pet is becoming more independent but still needs your care.";
+    static const std::string adultStatus = "An adult pet is full of strength and energy. It's loyal to you and ready for new adventures.";
+    static const std::string masterStatus = "Your pet has achieved mastery! Its abilities and wisdom are impressive, it has become a true legend.";
+    static const std::string ancientStatus = "The ancient form of your pet is the embodiment of power and wisdom. It has come a long way under your guidance.";
+    
+    switch (m_evolutionLevel) {
+        case EvolutionLevel::Egg:
+            return eggStatus;
+        case EvolutionLevel::Baby:
+            return babyStatus;
+        case EvolutionLevel::Child:
+            return childStatus;
+        case EvolutionLevel::Teen:
+            return teenStatus;
+        case EvolutionLevel::Adult:
+            return adultStatus;
+        case EvolutionLevel::Master:
+            return masterStatus;
+        case EvolutionLevel::Ancient:
+            return ancientStatus;
+        default:
+            static const std::string unknown = "Unknown pet status";
+            return unknown;
+    }
+}

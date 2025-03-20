@@ -54,10 +54,10 @@ void DisplayManager::displayPetHeader() const {
     }
     std::cout << std::endl;
     
-    // Добавляем описание питомца
-    std::cout << "Description: " << m_petState.getDescription() << std::endl;
+    // Add pet description - using the more detailed status description instead of the basic description
+    std::cout << "Status: " << m_petState.getStatusDescription() << std::endl;
     
-    // Статистика сразу после описания
+    // Statistics right after the description
     std::cout << "\nStats:" << std::endl;
     std::cout << "  Hunger: " << static_cast<int>(std::floor(m_petState.getHunger())) << "%" << std::endl;
     std::cout << "  Happiness: " << static_cast<int>(std::floor(m_petState.getHappiness())) << "%" << std::endl;
@@ -69,7 +69,7 @@ void DisplayManager::displayPetHeader() const {
     }
     std::cout << std::endl;
     
-    // Добавляем информацию о достижениях
+    // Add achievements information
     const auto& achievementSystem = m_petState.getAchievementSystem();
     auto unlockedAchievements = achievementSystem.getUnlockedAchievements();
     std::cout << "Achievements: " << unlockedAchievements.size() << "/" << static_cast<int>(AchievementType::Count) << " unlocked" << std::endl << std::endl;

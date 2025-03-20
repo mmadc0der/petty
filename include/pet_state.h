@@ -179,10 +179,16 @@ public:
     std::string_view getAsciiArt() const;
     
     /**
-     * @brief Get the pet's description
-     * @return Description string for the current evolution level
+     * @brief Get the description of the pet based on its evolution level
+     * @return Description string
      */
     std::string_view getDescription() const;
+    
+    /**
+     * @brief Get a more detailed status description of the pet
+     * @return Detailed status description string
+     */
+    std::string_view getStatusDescription() const;
     
     /**
      * @brief Get the achievement system
