@@ -321,8 +321,10 @@ std::optional<std::string> GameLogic::applyTimeEffects() {
     // Calculate hours passed
     double hoursPassed = std::chrono::duration<double, std::ratio<3600, 1>>(duration).count();
     
-    if (hoursPassed < 0.01) {  
-        // Less than 36 seconds, no significant effects
+    // For command-line mode, we need a higher threshold to avoid changes on frequent status checks
+    // 0.05 hours = 3 minutes
+    if (hoursPassed < 0.05) {  
+        // Less than 3 minutes, no significant effects
         return std::nullopt;
     }
     
@@ -337,6 +339,9 @@ std::optional<std::string> GameLogic::applyTimeEffects() {
     
     m_petState.decreaseHunger(hungerDecrease);
     m_petState.decreaseHappiness(happinessDecrease);
+    
+    // Update last interaction time ONLY if we actually applied effects
+    m_petState.updateInteractionTime();
     
     // Generate message if significant time has passed
     if (hoursPassed > 1.0) {
@@ -631,10 +636,22 @@ void GameLogic::runInteractiveMode() {
     // Interactive loop
     std::string command;
     bool running = true;
+    auto lastTimeCheck = std::chrono::system_clock::now();
     
     while (running) {
-        std::cout << " > ";
+        std::cout << "> ";
         std::getline(std::cin, command);
+        
+        // Check if we need to apply time effects (every 5 minutes)
+        auto now = std::chrono::system_clock::now();
+        auto timeSinceLastCheck = std::chrono::duration<double, std::ratio<60, 1>>(now - lastTimeCheck).count();
+        if (timeSinceLastCheck >= 5.0) {  // 5 minutes
+            auto timeMessage = applyTimeEffects();
+            if (timeMessage) {
+                std::cout << *timeMessage << std::endl;
+            }
+            lastTimeCheck = now;
+        }
         
         // Convert to lowercase
         std::string lowerCommand = command;
