@@ -23,6 +23,7 @@ PetState::PetState()
     , m_happiness(50)
     , m_energy(50)
     , m_lastInteractionTime(std::chrono::system_clock::now())
+    , m_birthDate(std::chrono::system_clock::now())
 {
 }
 
@@ -34,6 +35,7 @@ void PetState::initialize() {
     m_happiness = 50;
     m_energy = 50;
     m_lastInteractionTime = std::chrono::system_clock::now();
+    m_birthDate = std::chrono::system_clock::now();
     
     // Initialize achievements - all unlocked = false by default
 }
@@ -117,6 +119,9 @@ bool PetState::load() {
         file.read(reinterpret_cast<char*>(&lastInteractionSeconds), sizeof(lastInteractionSeconds));
         m_lastInteractionTime = std::chrono::system_clock::from_time_t(static_cast<std::time_t>(lastInteractionSeconds));
         
+        // For older versions, set birth date to last interaction time
+        m_birthDate = m_lastInteractionTime;
+        
         // Read achievements bitset
         uint64_t achievementBits;
         file.read(reinterpret_cast<char*>(&achievementBits), sizeof(achievementBits));
@@ -132,6 +137,15 @@ bool PetState::load() {
                 AchievementType type = static_cast<AchievementType>(i);
                 if (!m_achievementSystem.isUnlocked(type) && progress > 0) {
                     m_achievementSystem.setProgress(type, progress);
+                }
+            }
+            
+            // Read birth date if we have enough data in the file
+            if (file && !file.eof()) {
+                uint64_t birthDateSeconds;
+                file.read(reinterpret_cast<char*>(&birthDateSeconds), sizeof(birthDateSeconds));
+                if (file) {
+                    m_birthDate = std::chrono::system_clock::from_time_t(static_cast<std::time_t>(birthDateSeconds));
                 }
             }
         }
@@ -194,6 +208,12 @@ bool PetState::save() const {
             uint32_t progress = m_achievementSystem.getProgress(static_cast<AchievementType>(i));
             file.write(reinterpret_cast<const char*>(&progress), sizeof(progress));
         }
+        
+        // Write birth date as seconds since epoch
+        uint64_t birthDateSeconds = 
+            std::chrono::duration_cast<std::chrono::seconds>(
+                m_birthDate.time_since_epoch()).count();
+        file.write(reinterpret_cast<const char*>(&birthDateSeconds), sizeof(birthDateSeconds));
         
         if (!file) {
             std::cerr << "Error writing state file: " << statePath.string() << std::endl;

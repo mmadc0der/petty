@@ -59,6 +59,9 @@ void GameLogic::showStatus() const {
     std::cout << "  Happiness: " << static_cast<int>(m_petState.getHappiness()) << "%" << std::endl;
     std::cout << "  Energy: " << static_cast<int>(m_petState.getEnergy()) << "%" << std::endl;
     
+    // Calculate current time
+    auto now = std::chrono::system_clock::now();
+    
     // Display last interaction time
     auto lastTime = m_petState.getLastInteractionTime();
     auto timeT = std::chrono::system_clock::to_time_t(lastTime);
@@ -72,10 +75,61 @@ void GameLogic::showStatus() const {
     localtime_r(&timeT, tm);
 #endif
     
+    // Format last interaction time as "DD Mon YYYY HH:MM"
     std::stringstream ss;
-    ss << std::put_time(tm, "%Y-%m-%d %H:%M:%S");
+    ss << std::put_time(tm, "%d %b %Y %H:%M");
     
-    std::cout << "\nLast interaction: " << ss.str() << std::endl;
+    // Calculate time since last interaction
+    auto timeSinceLastInteraction = std::chrono::duration_cast<std::chrono::seconds>(now - lastTime).count();
+    
+    // Format time since last interaction in humanized format
+    std::string timeString;
+    int lastDays = timeSinceLastInteraction / (24 * 60 * 60);
+    int hours = (timeSinceLastInteraction % (24 * 60 * 60)) / (60 * 60);
+    int minutes = (timeSinceLastInteraction % (60 * 60)) / 60;
+    
+    if (lastDays > 0) {
+        timeString += std::to_string(lastDays) + "d ";
+    }
+    if (hours > 0 || lastDays > 0) {
+        timeString += std::to_string(hours) + "h ";
+    }
+    timeString += std::to_string(minutes) + "m";
+    
+    std::cout << "\nLast interaction: " << ss.str() << " (" << timeString << ")" << std::endl;
+    
+    // Format birth date
+    auto birthDate = m_petState.getBirthDate();
+    auto birthTimeT = std::chrono::system_clock::to_time_t(birthDate);
+    
+    std::tm birthTmBuf;
+    std::tm* birthTm = &birthTmBuf;
+#ifdef _WIN32
+    localtime_s(birthTm, &birthTimeT);
+#else
+    localtime_r(&birthTimeT, birthTm);
+#endif
+    
+    // Format birth date as "DD Mon YYYY"
+    std::stringstream birthSs;
+    birthSs << std::put_time(birthTm, "%d %b %Y");
+    
+    // Calculate age
+    auto ageSeconds = std::chrono::duration_cast<std::chrono::seconds>(now - birthDate).count();
+    
+    // Format age in humanized format
+    std::string ageString;
+    int years = ageSeconds / (365 * 24 * 60 * 60);
+    int days = (ageSeconds % (365 * 24 * 60 * 60)) / (24 * 60 * 60);
+    
+    if (years > 0) {
+        ageString += std::to_string(years) + "y ";
+    }
+    if (days > 0 || years == 0) {
+        ageString += std::to_string(days) + "d";
+    }
+    
+    std::cout << "Birth date: " << birthSs.str() << " (" << ageString << ")" << std::endl;
     
     // Display achievements
     displayAchievements();

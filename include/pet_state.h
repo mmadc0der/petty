@@ -154,6 +154,12 @@ public:
     void updateInteractionTime();
     
     /**
+     * @brief Get the pet's birth date
+     * @return The time of the pet's creation
+     */
+    std::chrono::system_clock::time_point getBirthDate() const { return m_birthDate; }
+    
+    /**
      * @brief Get the pet's ASCII art representation
      * @return ASCII art string for the current evolution level
      */
@@ -213,6 +219,9 @@ private:
     
     // Last interaction time
     std::chrono::system_clock::time_point m_lastInteractionTime;
+    
+    // Birth date (creation time)
+    std::chrono::system_clock::time_point m_birthDate;
     
     // Achievement system
     AchievementSystem m_achievementSystem;
