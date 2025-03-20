@@ -15,34 +15,34 @@ public:
      * @param displayManager Reference to the display manager
      * @param achievementManager Reference to the achievement manager
      */
-    InteractionManager(PetState& petState, DisplayManager& displayManager, AchievementManager& achievementManager);
+    InteractionManager(PetState& petState, DisplayManager& displayManager, AchievementManager& achievementManager) noexcept;
 
     /**
      * @brief Feed the pet
      */
-    void feedPet();
+    void feedPet() noexcept;
 
     /**
      * @brief Play with the pet
      */
-    void playWithPet();
+    void playWithPet() noexcept;
 
     /**
      * @brief Show the current status of the pet
      */
-    void showStatus() const;
+    void showStatus() const noexcept;
 
     /**
      * @brief Show evolution progress
      */
-    void showEvolutionProgress() const;
+    void showEvolutionProgress() const noexcept;
 
     /**
      * @brief Create a new pet, optionally overwriting an existing one
      * @param force If true, will create a new pet even if one already exists
      * @return true if a new pet was created, false otherwise
      */
-    bool createNewPet(bool force = false);
+    bool createNewPet(bool force = false) noexcept;
 
 private:
     // Reference to the pet state

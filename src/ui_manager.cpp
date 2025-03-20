@@ -2,16 +2,17 @@
 #include "../include/game_logic.h"
 #include <iostream>
 #include <algorithm>
-#include <sstream>
+#include <format>
 #include <chrono>
 #include <memory> // Added for std::weak_ptr
+#include <string_view>
 
 UIManager::UIManager(
     PetState& petState,
     DisplayManager& displayManager,
     AchievementManager& achievementManager,
     InteractionManager& interactionManager,
-    TimeManager& timeManager)
+    TimeManager& timeManager) noexcept
     : m_petState(petState)
     , m_displayManager(displayManager)
     , m_achievementManager(achievementManager)
@@ -22,11 +23,11 @@ UIManager::UIManager(
     initializeCommandHandlers();
 }
 
-void UIManager::setGameLogic(std::shared_ptr<GameLogic> gameLogic) {
+void UIManager::setGameLogic(std::shared_ptr<GameLogic> gameLogic) noexcept {
     m_gameLogic = gameLogic; // Save weak_ptr
 }
 
-void UIManager::initializeCommandHandlers() {
+void UIManager::initializeCommandHandlers() noexcept {
     // Call initialization from base class
     CommandHandlerBase::initializeCommandHandlers();
     
@@ -38,7 +39,7 @@ void UIManager::initializeCommandHandlers() {
     };
 }
 
-void UIManager::runInteractiveMode() {
+void UIManager::runInteractiveMode() noexcept {
     // Apply time effects first
     auto message = m_timeManager.applyTimeEffects();
     if (message) {
@@ -85,11 +86,22 @@ void UIManager::runInteractiveMode() {
             m_displayManager.displayPetHeader();
         } else {
             // Parse the command
-            std::vector<std::string> args;
-            std::istringstream iss(command);
-            std::string arg;
-            while (iss >> arg) {
-                args.push_back(arg);
+            std::vector<std::string_view> args;
+            std::string_view commandView = command;
+            
+            // Разбиваем строку на аргументы
+            size_t start = 0;
+            size_t end = 0;
+            while ((end = commandView.find(' ', start)) != std::string_view::npos) {
+                if (end > start) {
+                    args.push_back(commandView.substr(start, end - start));
+                }
+                start = end + 1;
+            }
+            
+            // Добавляем последний аргумент
+            if (start < commandView.size()) {
+                args.push_back(commandView.substr(start));
             }
             
             if (!args.empty()) {
@@ -104,7 +116,7 @@ void UIManager::runInteractiveMode() {
     }
 }
 
-bool UIManager::processCommand(const std::vector<std::string>& args) {
+bool UIManager::processCommand(const std::vector<std::string_view>& args) noexcept {
     if (args.empty()) {
         return false;
     }
@@ -118,7 +130,7 @@ bool UIManager::processCommand(const std::vector<std::string>& args) {
     return false;
 }
 
-void UIManager::showHelp() const {
+void UIManager::showHelp() const noexcept {
     std::cout << "Virtual Pet Application\n"
               << "----------------------\n"
               << "Commands:\n"

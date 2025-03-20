@@ -3,15 +3,15 @@
 #include <chrono>
 #include <ctime>
 #include <iomanip>
-#include <sstream>
+#include <format>
 #include <algorithm>
 
-TimeManager::TimeManager(PetState& petState)
+TimeManager::TimeManager(PetState& petState) noexcept
     : m_petState(petState)
 {
 }
 
-std::optional<std::string> TimeManager::applyTimeEffects() {
+std::optional<std::string> TimeManager::applyTimeEffects() noexcept {
     auto lastTime = m_petState.getLastInteractionTime();
     if (lastTime == std::chrono::system_clock::time_point{}) {
         // First interaction, no effects to apply
@@ -48,17 +48,14 @@ std::optional<std::string> TimeManager::applyTimeEffects() {
     
     // Generate message if significant time has passed
     if (hoursPassed > 1.0) {
-        std::stringstream ss;
-        ss << std::fixed << std::setprecision(1);
+        std::string message;
         
         if (hoursPassed < 24.0) {
-            ss << hoursPassed << " hours have passed since your last visit.";
+            message = std::format("{:.1f} hours have passed since your last visit.", hoursPassed);
         } else {
             double daysPassed = hoursPassed / 24.0;
-            ss << daysPassed << " days have passed since your last visit.";
+            message = std::format("{:.1f} days have passed since your last visit.", daysPassed);
         }
-        
-        std::string message = ss.str();
         
         if (m_petState.getHunger() < 20.0f) {
             message += "\nYour pet is very hungry!";
@@ -74,7 +71,7 @@ std::optional<std::string> TimeManager::applyTimeEffects() {
     return std::nullopt;
 }
 
-std::string TimeManager::formatTimeSinceLastInteraction(const std::chrono::system_clock::time_point& now) const {
+std::string TimeManager::formatTimeSinceLastInteraction(const std::chrono::system_clock::time_point& now) const noexcept {
     auto lastTime = m_petState.getLastInteractionTime();
     auto timeT = std::chrono::system_clock::to_time_t(lastTime);
     
@@ -88,8 +85,8 @@ std::string TimeManager::formatTimeSinceLastInteraction(const std::chrono::syste
 #endif
     
     // Format last interaction time as "DD Mon YYYY HH:MM"
-    std::stringstream ss;
-    ss << std::put_time(tm, "%d %b %Y %H:%M");
+    char timeStr[20];
+    std::strftime(timeStr, sizeof(timeStr), "%d %b %Y %H:%M", tm);
     
     // Calculate time since last interaction
     auto timeSinceLastInteraction = std::chrono::duration_cast<std::chrono::seconds>(now - lastTime).count();
@@ -101,17 +98,17 @@ std::string TimeManager::formatTimeSinceLastInteraction(const std::chrono::syste
     int minutes = (timeSinceLastInteraction % (60 * 60)) / 60;
     
     if (lastDays > 0) {
-        timeString += std::to_string(lastDays) + "d ";
+        timeString += std::format("{}d ", lastDays);
     }
     if (hours > 0 || lastDays > 0) {
-        timeString += std::to_string(hours) + "h ";
+        timeString += std::format("{}h ", hours);
     }
-    timeString += std::to_string(minutes) + "m";
+    timeString += std::format("{}m", minutes);
     
-    return ss.str() + " (" + timeString + ")";
+    return std::format("{} ({})", timeStr, timeString);
 }
 
-std::string TimeManager::formatPetAge(const std::chrono::system_clock::time_point& now) const {
+std::string TimeManager::formatPetAge(const std::chrono::system_clock::time_point& now) const noexcept {
     // Format birth date
     auto birthDate = m_petState.getBirthDate();
     auto birthTimeT = std::chrono::system_clock::to_time_t(birthDate);
@@ -125,8 +122,8 @@ std::string TimeManager::formatPetAge(const std::chrono::system_clock::time_poin
 #endif
     
     // Format birth date as "DD Mon YYYY"
-    std::stringstream birthSs;
-    birthSs << std::put_time(birthTm, "%d %b %Y");
+    char birthStr[20];
+    std::strftime(birthStr, sizeof(birthStr), "%d %b %Y", birthTm);
     
     // Calculate age
     auto ageSeconds = std::chrono::duration_cast<std::chrono::seconds>(now - birthDate).count();
@@ -137,11 +134,14 @@ std::string TimeManager::formatPetAge(const std::chrono::system_clock::time_poin
     int days = (ageSeconds % (365 * 24 * 60 * 60)) / (24 * 60 * 60);
     
     if (years > 0) {
-        ageString += std::to_string(years) + "y ";
+        ageString += std::format("{}y ", years);
     }
-    if (days > 0 || years == 0) {
-        ageString += std::to_string(days) + "d";
+    if (days > 0 || years > 0) {
+        ageString += std::format("{}d", days);
+    } else {
+        int hours = ageSeconds / (60 * 60);
+        ageString += std::format("{}h", hours);
     }
     
-    return birthSs.str() + " (" + ageString + ")";
+    return std::format("{} ({})", birthStr, ageString);
 }

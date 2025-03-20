@@ -14,7 +14,7 @@ public:
      * @brief Constructor
      * @param petState Reference to the pet state
      */
-    explicit TimeManager(PetState& petState);
+    explicit TimeManager(PetState& petState) noexcept;
 
     /**
      * @brief Apply time-based effects to the pet
@@ -24,21 +24,21 @@ public:
      * 
      * @return Optional string with a message about significant time passing
      */
-    std::optional<std::string> applyTimeEffects();
+    std::optional<std::string> applyTimeEffects() noexcept;
 
     /**
      * @brief Format time since last interaction
      * @param now Current time
      * @return Formatted string with time since last interaction
      */
-    std::string formatTimeSinceLastInteraction(const std::chrono::system_clock::time_point& now) const;
+    std::string formatTimeSinceLastInteraction(const std::chrono::system_clock::time_point& now) const noexcept;
 
     /**
      * @brief Format pet age
      * @param now Current time
      * @return Formatted string with pet age
      */
-    std::string formatPetAge(const std::chrono::system_clock::time_point& now) const;
+    std::string formatPetAge(const std::chrono::system_clock::time_point& now) const noexcept;
 
 private:
     // Reference to the pet state

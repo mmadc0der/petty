@@ -1,9 +1,11 @@
 #include "../include/game_logic.h"
 #include "../include/ui_manager.h"
 #include <iostream>
+#include <algorithm>
+#include <format>
 #include <memory>
 
-GameLogic::GameLogic(PetState& petState)
+GameLogic::GameLogic(PetState& petState) noexcept
     : m_petState(petState)
 {
     // Initialize all managers
@@ -16,11 +18,7 @@ GameLogic::GameLogic(PetState& petState)
     // Note: UIManager will be initialized later via initializeUIManager()
 }
 
-GameLogic::~GameLogic() {
-    // No need to manually delete m_uiManager in the destructor as we're using unique_ptr
-}
-
-void GameLogic::initializeUIManager() {
+void GameLogic::initializeUIManager() noexcept {
     // Create UI manager with necessary references to other managers
     m_uiManager = std::make_unique<UIManager>(
         m_petState, 
@@ -36,7 +34,7 @@ void GameLogic::initializeUIManager() {
     m_uiManager->setGameLogic(shared_from_this());
 }
 
-void GameLogic::showStatus() const {
+void GameLogic::showStatus() const noexcept {
     // Apply time effects first
     auto message = m_timeManager->applyTimeEffects();
     if (message) {
@@ -54,7 +52,7 @@ void GameLogic::showStatus() const {
     m_interactionManager->showStatus();
 }
 
-void GameLogic::feedPet() {
+void GameLogic::feedPet() noexcept {
     // Apply time effects first
     auto message = m_timeManager->applyTimeEffects();
     if (message) {
@@ -68,7 +66,7 @@ void GameLogic::feedPet() {
     m_petState.save();
 }
 
-void GameLogic::playWithPet() {
+void GameLogic::playWithPet() noexcept {
     // Apply time effects first
     auto message = m_timeManager->applyTimeEffects();
     if (message) {
@@ -82,17 +80,17 @@ void GameLogic::playWithPet() {
     m_petState.save();
 }
 
-void GameLogic::showEvolutionProgress() const {
+void GameLogic::showEvolutionProgress() const noexcept {
     // Display evolution progress
     m_interactionManager->showEvolutionProgress();
 }
 
-void GameLogic::showAchievements() const {
+void GameLogic::showAchievements() const noexcept {
     // Display all achievements
     m_achievementManager->showAllAchievements();
 }
 
-bool GameLogic::createNewPet(bool force) {
+bool GameLogic::createNewPet(bool force) noexcept {
     // Check if a pet already exists
     if (m_petState.saveFileExists() && !force) {
         std::cout << "A pet already exists. Use -f to force creation of a new pet." << std::endl;
@@ -108,7 +106,7 @@ bool GameLogic::createNewPet(bool force) {
     return true;
 }
 
-void GameLogic::runInteractiveMode() {
+void GameLogic::runInteractiveMode() noexcept {
     // Run UI manager's interactive mode
     m_uiManager->runInteractiveMode();
 }

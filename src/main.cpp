@@ -5,14 +5,16 @@
 #include <exception>
 #include <filesystem>
 #include <algorithm>
+#include <string_view>
 #include "../include/command_parser.h"
 #include "../include/pet_state.h"
 #include "../include/game_logic.h"
+#include "../include/ui_manager.h"
 
 int main(int argc, char* argv[]) {
     try {
         // Parse command line arguments
-        std::vector<std::string> args;
+        std::vector<std::string_view> args;
         args.reserve(argc - 1);  // Reserve memory for arguments
         for (int i = 1; i < argc; ++i) {
             args.push_back(argv[i]);

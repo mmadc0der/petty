@@ -3,12 +3,12 @@
 #include <iostream>
 #include <algorithm>
 
-CommandParser::CommandParser() {
+CommandParser::CommandParser() noexcept {
     // Initialize command handlers
     initializeCommandHandlers();
 }
 
-void CommandParser::initializeCommandHandlers() {
+void CommandParser::initializeCommandHandlers() noexcept {
     // Call initialization from base class
     CommandHandlerBase::initializeCommandHandlers();
     
@@ -36,7 +36,7 @@ void CommandParser::initializeCommandHandlers() {
     };
 }
 
-bool CommandParser::processCommand(const std::vector<std::string>& args, GameLogic& gameLogic) const {
+bool CommandParser::processCommand(const std::vector<std::string_view>& args, GameLogic& gameLogic) noexcept {
     // If no arguments, show help
     if (args.empty()) {
         showHelp();
@@ -53,7 +53,7 @@ bool CommandParser::processCommand(const std::vector<std::string>& args, GameLog
     return CommandHandlerBase::processCommand(args, gameLogic);
 }
 
-void CommandParser::showHelp() const {
+void CommandParser::showHelp() const noexcept {
     std::cout << "Virtual Pet Application - Command Line Mode\n"
               << "------------------------------------------\n"
               << "Usage: pet [command] [options]\n\n"

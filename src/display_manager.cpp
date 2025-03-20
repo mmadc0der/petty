@@ -4,18 +4,18 @@
 #include <cmath>
 #include <chrono>
 #include <iomanip>
-#include <sstream>
+#include <format>
 
-DisplayManager::DisplayManager(PetState& petState)
+DisplayManager::DisplayManager(PetState& petState) noexcept
     : m_petState(petState)
 {
 }
 
-void DisplayManager::displayMessage(std::string_view message) const {
+void DisplayManager::displayMessage(std::string_view message) const noexcept {
     std::cout << message << std::endl;
 }
 
-void DisplayManager::clearScreen() const {
+void DisplayManager::clearScreen() const noexcept {
 #ifdef _WIN32
     system("cls");
 #else
@@ -23,7 +23,7 @@ void DisplayManager::clearScreen() const {
 #endif
 }
 
-void DisplayManager::displayPetHeader() const {
+void DisplayManager::displayPetHeader() const noexcept {
     std::cout << m_petState.getAsciiArt() << std::endl;
     
     std::cout << "Name: " << m_petState.getName() << std::endl;
@@ -75,7 +75,7 @@ void DisplayManager::displayPetHeader() const {
     std::cout << "Achievements: " << unlockedAchievements.size() << "/" << static_cast<int>(AchievementType::Count) << " unlocked" << std::endl << std::endl;
 }
 
-std::string DisplayManager::getEvolutionLevelName(PetState::EvolutionLevel level) const {
+std::string_view DisplayManager::getEvolutionLevelName(PetState::EvolutionLevel level) const noexcept {
     switch (level) {
         case PetState::EvolutionLevel::Egg:
             return "Egg";

@@ -30,13 +30,13 @@ public:
         AchievementManager& achievementManager,
         InteractionManager& interactionManager,
         TimeManager& timeManager
-    );
+    ) noexcept;
 
     /**
      * @brief Set game logic reference for command processing
      * @param gameLogic Shared pointer к объекту game logic
      */
-    void setGameLogic(std::shared_ptr<GameLogic> gameLogic);
+    void setGameLogic(std::shared_ptr<GameLogic> gameLogic) noexcept;
 
     /**
      * @brief Run interactive mode
@@ -44,25 +44,25 @@ public:
      * This method runs an interactive mode where the user can enter commands
      * directly without restarting the application.
      */
-    void runInteractiveMode();
+    void runInteractiveMode() noexcept;
 
     /**
      * @brief Process a command
      * @param args Command arguments
      * @return True if the command was processed successfully
      */
-    bool processCommand(const std::vector<std::string>& args);
+    bool processCommand(const std::vector<std::string_view>& args) noexcept;
     
     /**
      * @brief Show help information
      */
-    void showHelp() const override;
+    void showHelp() const noexcept override;
 
 private:
     /**
      * @brief Initialize command handlers
      */
-    void initializeCommandHandlers() override;
+    void initializeCommandHandlers() noexcept override;
 
     // Weak pointer to object game logic (does not own it)
     std::weak_ptr<GameLogic> m_gameLogic;

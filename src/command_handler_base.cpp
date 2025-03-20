@@ -2,7 +2,7 @@
 #include "../include/game_logic.h"
 #include <algorithm>
 
-void CommandHandlerBase::initializeCommandHandlers() {
+void CommandHandlerBase::initializeCommandHandlers() noexcept {
     // Initialize command handlers using lambda functions
     m_commandHandlers["status"] = [](GameLogic& gameLogic) -> void {
         gameLogic.showStatus();
@@ -29,16 +29,19 @@ void CommandHandlerBase::initializeCommandHandlers() {
     };
 }
 
-bool CommandHandlerBase::processCommand(const std::vector<std::string>& args, GameLogic& gameLogic) const {
+bool CommandHandlerBase::processCommand(const std::vector<std::string_view>& args, GameLogic& gameLogic) noexcept {
     if (args.empty()) {
         return false;
     }
     
-    std::string command = args[0];
-    std::transform(command.begin(), command.end(), command.begin(), 
+    std::string_view command = args[0];
+    // Преобразовать команду к нижнему регистру
+    // Для string_view нужно создать новую строку для преобразования
+    std::string lowerCommand(command);
+    std::transform(lowerCommand.begin(), lowerCommand.end(), lowerCommand.begin(), 
                    [](unsigned char c) { return std::tolower(c); });
     
-    auto it = m_commandHandlers.find(command);
+    auto it = m_commandHandlers.find(lowerCommand);
     if (it != m_commandHandlers.end()) {
         it->second(gameLogic);
         return true;

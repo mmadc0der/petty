@@ -21,7 +21,7 @@ public:
     /**
      * @brief Constructor
      */
-    CommandParser();
+    CommandParser() noexcept;
     
     /**
      * @brief Process command line arguments
@@ -29,16 +29,16 @@ public:
      * @param gameLogic Reference to game logic
      * @return True if the command was processed successfully
      */
-    bool processCommand(const std::vector<std::string>& args, GameLogic& gameLogic) const override;
+    bool processCommand(const std::vector<std::string_view>& args, GameLogic& gameLogic) noexcept override;
     
     /**
      * @brief Show help information
      */
-    void showHelp() const override;
+    void showHelp() const noexcept override;
     
 private:
     /**
      * @brief Initialize command handlers
      */
-    void initializeCommandHandlers() override;
+    void initializeCommandHandlers() noexcept override;
 };

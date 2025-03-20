@@ -2,12 +2,12 @@
 #include <iostream>
 #include <algorithm>
 
-AchievementManager::AchievementManager(PetState& petState)
+AchievementManager::AchievementManager(PetState& petState) noexcept
     : m_petState(petState)
 {
 }
 
-bool AchievementManager::displayAchievements(bool newlyUnlocked) const {
+bool AchievementManager::displayAchievements(bool newlyUnlocked) const noexcept {
     const auto& achievementSystem = m_petState.getAchievementSystem();
     auto unlockedAchievements = achievementSystem.getUnlockedAchievements();
     
@@ -27,7 +27,7 @@ bool AchievementManager::displayAchievements(bool newlyUnlocked) const {
     return !unlockedAchievements.empty();
 }
 
-bool AchievementManager::displayNewlyUnlockedAchievements() {
+bool AchievementManager::displayNewlyUnlockedAchievements() noexcept {
     auto& achievementSystem = m_petState.getAchievementSystem();
     auto newlyUnlocked = achievementSystem.getNewlyUnlockedAchievements();
     
@@ -45,7 +45,7 @@ bool AchievementManager::displayNewlyUnlockedAchievements() {
     return hasDisplayed;
 }
 
-void AchievementManager::showAllAchievements() const {
+void AchievementManager::showAllAchievements() const noexcept {
     const auto& achievementSystem = m_petState.getAchievementSystem();
     auto unlockedAchievements = achievementSystem.getUnlockedAchievements();
     

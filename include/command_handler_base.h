@@ -29,12 +29,12 @@ public:
      * @param gameLogic Reference to game logic object
      * @return true if command was processed successfully, false otherwise
      */
-    virtual bool processCommand(const std::vector<std::string>& args, GameLogic& gameLogic) const;
+    virtual bool processCommand(const std::vector<std::string_view>& args, GameLogic& gameLogic) noexcept;
 
     /**
      * @brief Show help information
      */
-    virtual void showHelp() const = 0;
+    virtual void showHelp() const noexcept = 0;
 
 protected:
     // Type of command handler function
@@ -46,5 +46,5 @@ protected:
     /**
      * @brief Initialize command handlers
      */
-    virtual void initializeCommandHandlers();
+    virtual void initializeCommandHandlers() noexcept = 0;
 };

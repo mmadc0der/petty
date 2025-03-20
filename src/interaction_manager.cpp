@@ -6,14 +6,14 @@
 InteractionManager::InteractionManager(
     PetState& petState, 
     DisplayManager& displayManager, 
-    AchievementManager& achievementManager)
+    AchievementManager& achievementManager) noexcept
     : m_petState(petState)
     , m_displayManager(displayManager)
     , m_achievementManager(achievementManager)
 {
 }
 
-void InteractionManager::feedPet() {
+void InteractionManager::feedPet() noexcept {
     // Check if pet was already full
     bool wasFull = (m_petState.getHunger() == 100);
     
@@ -58,7 +58,10 @@ void InteractionManager::feedPet() {
     std::cout << std::endl;
 }
 
-void InteractionManager::playWithPet() {
+void InteractionManager::playWithPet() noexcept {
+    // Check if pet was already at max happiness
+    bool wasMax = (m_petState.getHappiness() == 100);
+    
     // Increase happiness and decrease energy
     m_petState.increaseHappiness(15);
     m_petState.decreaseEnergy(10);
@@ -69,6 +72,13 @@ void InteractionManager::playWithPet() {
     // Update interaction time
     m_petState.updateInteractionTime();
     
+    // Unlock social achievement if first time playing
+    if (m_petState.getAchievementSystem().unlock(AchievementType::Playful)) {
+        std::cout << "\nAchievement unlocked: " 
+                << AchievementSystem::getName(AchievementType::Playful) 
+                << "!" << std::endl;
+    }
+    
     // Display message
     if (evolved) {
         std::cout << "Your pet " << m_petState.getName() << " has evolved to " 
@@ -76,8 +86,8 @@ void InteractionManager::playWithPet() {
                 << "!" << std::endl;
         std::cout << m_petState.getAsciiArt() << std::endl;
         std::cout << m_petState.getDescription() << std::endl;
-    } else if (m_petState.getHappiness() == 100) {
-        m_displayManager.displayMessage("Your pet is extremely happy! It's having the time of its life!");
+    } else if (wasMax && m_petState.getHappiness() == 100) {
+        m_displayManager.displayMessage("Your pet is already extremely happy! It's having the time of its life!");
     } else {
         m_displayManager.displayMessage("Your pet jumps around playfully. It's having fun!");
     }
@@ -98,14 +108,20 @@ void InteractionManager::playWithPet() {
     std::cout << std::endl;
 }
 
-void InteractionManager::showStatus() const {
+void InteractionManager::showStatus() const noexcept {
+    // Display pet header (ASCII art, name, evolution level)
     m_displayManager.displayPetHeader();
     
     auto now = std::chrono::system_clock::now();
     auto birthDate = m_petState.getBirthDate();
     
     auto birthTime_t = std::chrono::system_clock::to_time_t(birthDate);
-    std::tm birthTm = *std::localtime(&birthTime_t);
+    std::tm birthTm;
+#ifdef _WIN32
+    localtime_s(&birthTm, &birthTime_t);
+#else
+    localtime_r(&birthTime_t, &birthTm);
+#endif
     
     char birthDateStr[20];
     std::strftime(birthDateStr, sizeof(birthDateStr), "%d %b %Y", &birthTm);
@@ -133,7 +149,12 @@ void InteractionManager::showStatus() const {
     auto lastInteraction = m_petState.getLastInteractionTime();
     
     auto lastInteractionTime_t = std::chrono::system_clock::to_time_t(lastInteraction);
-    std::tm lastInteractionTm = *std::localtime(&lastInteractionTime_t);
+    std::tm lastInteractionTm;
+#ifdef _WIN32
+    localtime_s(&lastInteractionTm, &lastInteractionTime_t);
+#else
+    localtime_r(&lastInteractionTime_t, &lastInteractionTm);
+#endif
     
     char lastInteractionStr[20];
     std::strftime(lastInteractionStr, sizeof(lastInteractionStr), "%d %b %Y", &lastInteractionTm);
@@ -162,7 +183,7 @@ void InteractionManager::showStatus() const {
     std::cout << std::endl << std::endl;
 }
 
-void InteractionManager::showEvolutionProgress() const {
+void InteractionManager::showEvolutionProgress() const noexcept {
     std::cout << "\n" << m_petState.getAsciiArt() << std::endl;
     
     std::cout << "Current evolution: ";
@@ -244,7 +265,7 @@ void InteractionManager::showEvolutionProgress() const {
     }
 }
 
-bool InteractionManager::createNewPet(bool force) {
+bool InteractionManager::createNewPet(bool force) noexcept {
     // Check if a save file exists and we're not forcing overwrite
     if (m_petState.saveFileExists() && !force) {
         std::cout << "A pet already exists. Do you want to overwrite it? (yes/no): ";

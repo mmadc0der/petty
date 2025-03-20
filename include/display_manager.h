@@ -12,30 +12,30 @@ public:
      * @brief Constructor
      * @param petState Reference to the pet state
      */
-    explicit DisplayManager(PetState& petState);
+    explicit DisplayManager(PetState& petState) noexcept;
 
     /**
      * @brief Display a message about the pet's state change
      * @param message The message to display
      */
-    void displayMessage(std::string_view message) const;
+    void displayMessage(std::string_view message) const noexcept;
 
     /**
      * @brief Display the pet header (portrait, name, stats)
      */
-    void displayPetHeader() const;
+    void displayPetHeader() const noexcept;
 
     /**
      * @brief Clear the console screen
      */
-    void clearScreen() const;
+    void clearScreen() const noexcept;
 
     /**
      * @brief Get the name of the evolution level
      * @param level The evolution level
      * @return The name of the evolution level
      */
-    std::string getEvolutionLevelName(PetState::EvolutionLevel level) const;
+    std::string_view getEvolutionLevelName(PetState::EvolutionLevel level) const noexcept;
 
 private:
     // Reference to the pet state

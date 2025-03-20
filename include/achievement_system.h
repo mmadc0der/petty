@@ -40,13 +40,13 @@ public:
     /**
      * @brief Constructor
      */
-    AchievementSystem();
+    AchievementSystem() noexcept;
     
     /**
      * @brief Get the number of achievements
      * @return Total number of achievements
      */
-    static constexpr size_t getAchievementCount() {
+    static constexpr size_t getAchievementCount() noexcept {
         return static_cast<size_t>(AchievementType::Count);
     }
     
@@ -55,111 +55,111 @@ public:
      * @param type The achievement type to check
      * @return true if the achievement is unlocked, false otherwise
      */
-    bool isUnlocked(AchievementType type) const;
+    bool isUnlocked(AchievementType type) const noexcept;
     
     /**
      * @brief Unlock an achievement
      * @param type The achievement type to unlock
      * @return true if the achievement was newly unlocked, false if it was already unlocked
      */
-    bool unlock(AchievementType type);
+    bool unlock(AchievementType type) noexcept;
     
     /**
      * @brief Get the name of an achievement
      * @param type The achievement type
      * @return The name of the achievement
      */
-    static std::string_view getName(AchievementType type);
+    static std::string_view getName(AchievementType type) noexcept;
     
     /**
      * @brief Get the description of an achievement
      * @param type The achievement type
      * @return The description of the achievement
      */
-    static std::string_view getDescription(AchievementType type);
+    static std::string_view getDescription(AchievementType type) noexcept;
     
     /**
      * @brief Get a vector of all unlocked achievements
      * @return Vector of unlocked achievement types
      */
-    std::vector<AchievementType> getUnlockedAchievements() const;
+    std::vector<AchievementType> getUnlockedAchievements() const noexcept;
     
     /**
      * @brief Get a vector of newly unlocked achievements since the last call
      * @return Vector of newly unlocked achievement types, or empty if none
      */
-    std::vector<AchievementType> getNewlyUnlockedAchievements();
+    std::vector<AchievementType> getNewlyUnlockedAchievements() noexcept;
     
     /**
      * @brief Reset newly unlocked achievements tracking
      */
-    void clearNewlyUnlocked();
+    void clearNewlyUnlocked() noexcept;
     
     /**
      * @brief Get the binary representation of unlocked achievements
      * @return Bitset representing unlocked achievements
      */
-    const std::bitset<64>& getUnlockedBitset() const { return m_unlockedAchievements; }
+    const std::bitset<64>& getUnlockedBitset() const noexcept { return m_unlockedAchievements; }
     
     /**
      * @brief Set the unlocked achievements from a binary representation
      * @param bitset Bitset representing unlocked achievements
      */
-    void setUnlockedBitset(const std::bitset<64>& bitset);
+    void setUnlockedBitset(const std::bitset<64>& bitset) noexcept;
     
     /**
      * @brief Get the binary representation of unlocked achievements as uint64_t
      * @return uint64_t representing unlocked achievements
      */
-    uint64_t getUnlockedBits() const { return m_unlockedAchievements.to_ullong(); }
+    uint64_t getUnlockedBits() const noexcept { return m_unlockedAchievements.to_ullong(); }
     
     /**
      * @brief Set the unlocked achievements from a binary representation
      * @param bits uint64_t representing unlocked achievements
      */
-    void setUnlockedBits(uint64_t bits) { m_unlockedAchievements = std::bitset<64>(bits); }
+    void setUnlockedBits(uint64_t bits) noexcept { m_unlockedAchievements = std::bitset<64>(bits); }
     
     /**
      * @brief Track progress for achievements that require multiple steps
      * @param type The achievement type
      * @param amount The amount of progress to increment (default is 1)
      */
-    void incrementProgress(AchievementType type, uint32_t amount = 1);
+    void incrementProgress(AchievementType type, uint32_t amount = 1) noexcept;
     
     /**
      * @brief Set progress directly for an achievement
      * @param type The achievement type
      * @param progress The progress to set
      */
-    void setProgress(AchievementType type, uint32_t progress);
+    void setProgress(AchievementType type, uint32_t progress) noexcept;
     
     /**
      * @brief Get progress for an achievement
      * @param type The achievement type
      * @return The current progress
      */
-    uint32_t getProgress(AchievementType type) const;
+    uint32_t getProgress(AchievementType type) const noexcept;
     
     /**
      * @brief Get total required progress for an achievement
      * @param type The achievement type
      * @return The total required progress
      */
-    static uint32_t getRequiredProgress(AchievementType type);
+    static uint32_t getRequiredProgress(AchievementType type) noexcept;
     
     /**
      * @brief Save achievement data to a file stream
      * @param file The output file stream
      * @return true if saved successfully, false otherwise
      */
-    bool save(std::ofstream& file) const;
+    bool save(std::ofstream& file) const noexcept;
     
     /**
      * @brief Load achievement data from a file stream
      * @param file The input file stream
      * @return true if loaded successfully, false otherwise
      */
-    bool load(std::ifstream& file);
+    bool load(std::ifstream& file) noexcept;
     
 private:
     // Bitset to store unlocked achievements (64 bits allows for future expansion)

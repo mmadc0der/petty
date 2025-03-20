@@ -23,66 +23,66 @@ public:
      * @brief Constructor
      * @param petState Reference to the pet state
      */
-    explicit GameLogic(PetState& petState);
+    explicit GameLogic(PetState& petState) noexcept;
 
     /**
      * @brief Destructor
      */
-    ~GameLogic();
+    ~GameLogic() = default;
 
     /**
      * @brief Initializes UIManager with cyclic reference setup
      * 
      * Should be called after creating the object via std::make_shared
      */
-    void initializeUIManager();
+    void initializeUIManager() noexcept;
 
     /**
      * @brief Show pet status
      */
-    void showStatus() const;
+    void showStatus() const noexcept;
 
     /**
      * @brief Feed the pet
      */
-    void feedPet();
+    void feedPet() noexcept;
 
     /**
      * @brief Play with the pet
      */
-    void playWithPet();
+    void playWithPet() noexcept;
 
     /**
      * @brief Show evolution progress
      */
-    void showEvolutionProgress() const;
+    void showEvolutionProgress() const noexcept;
 
     /**
      * @brief Show all achievements and progress
      */
-    void showAchievements() const;
+    void showAchievements() const noexcept;
 
     /**
      * @brief Create a new pet, optionally overwriting the existing one
      * @param force If true, create a new pet even if one already exists
      * @return True if a new pet was created, false otherwise
      */
-    bool createNewPet(bool force = false);
+    bool createNewPet(bool force = false) noexcept;
 
     /**
      * @brief Run interactive mode (command loop)
      */
-    void runInteractiveMode();
+    void runInteractiveMode() noexcept;
 
     /**
      * @brief Clear the console screen
      */
-    void clearScreen() const;
+    void clearScreen() const noexcept;
 
     /**
      * @brief Display the pet header (portrait, name, stats)
      */
-    void displayPetHeader() const;
+    void displayPetHeader() const noexcept;
 
     /**
      * @brief Display newly unlocked achievements

@@ -2,7 +2,7 @@
 #include <iostream>
 #include <algorithm>
 
-AchievementSystem::AchievementSystem() 
+AchievementSystem::AchievementSystem() noexcept
     : m_unlockedAchievements(0), 
       m_newlyUnlockedAchievements(0),
       m_progress{}
@@ -11,7 +11,7 @@ AchievementSystem::AchievementSystem()
     std::fill(m_progress.begin(), m_progress.end(), 0);
 }
 
-bool AchievementSystem::isUnlocked(AchievementType type) const {
+bool AchievementSystem::isUnlocked(AchievementType type) const noexcept {
     if (type == AchievementType::Count) {
         return false;
     }
@@ -20,7 +20,7 @@ bool AchievementSystem::isUnlocked(AchievementType type) const {
     return m_unlockedAchievements.test(index);
 }
 
-bool AchievementSystem::unlock(AchievementType type) {
+bool AchievementSystem::unlock(AchievementType type) noexcept {
     if (type == AchievementType::Count) {
         return false;
     }
@@ -39,7 +39,7 @@ bool AchievementSystem::unlock(AchievementType type) {
     return true;
 }
 
-std::string_view AchievementSystem::getName(AchievementType type) {
+std::string_view AchievementSystem::getName(AchievementType type) noexcept {
     if (type == AchievementType::Count || static_cast<size_t>(type) >= ACHIEVEMENT_NAMES.size()) {
         return "Unknown Achievement";
     }
@@ -47,7 +47,7 @@ std::string_view AchievementSystem::getName(AchievementType type) {
     return ACHIEVEMENT_NAMES[static_cast<size_t>(type)];
 }
 
-std::string_view AchievementSystem::getDescription(AchievementType type) {
+std::string_view AchievementSystem::getDescription(AchievementType type) noexcept {
     if (type == AchievementType::Count || static_cast<size_t>(type) >= ACHIEVEMENT_DESCRIPTIONS.size()) {
         return "Unknown Achievement Description";
     }
@@ -55,7 +55,7 @@ std::string_view AchievementSystem::getDescription(AchievementType type) {
     return ACHIEVEMENT_DESCRIPTIONS[static_cast<size_t>(type)];
 }
 
-std::vector<AchievementType> AchievementSystem::getUnlockedAchievements() const {
+std::vector<AchievementType> AchievementSystem::getUnlockedAchievements() const noexcept {
     std::vector<AchievementType> unlocked;
     
     for (size_t i = 0; i < static_cast<size_t>(AchievementType::Count); ++i) {
@@ -67,7 +67,7 @@ std::vector<AchievementType> AchievementSystem::getUnlockedAchievements() const 
     return unlocked;
 }
 
-std::vector<AchievementType> AchievementSystem::getNewlyUnlockedAchievements() {
+std::vector<AchievementType> AchievementSystem::getNewlyUnlockedAchievements() noexcept {
     std::vector<AchievementType> newlyUnlocked;
     
     for (size_t i = 0; i < static_cast<size_t>(AchievementType::Count); ++i) {
@@ -79,16 +79,16 @@ std::vector<AchievementType> AchievementSystem::getNewlyUnlockedAchievements() {
     return newlyUnlocked;
 }
 
-void AchievementSystem::clearNewlyUnlocked() {
+void AchievementSystem::clearNewlyUnlocked() noexcept {
     m_newlyUnlockedAchievements.reset();
 }
 
-void AchievementSystem::setUnlockedBitset(const std::bitset<64>& bitset) {
+void AchievementSystem::setUnlockedBitset(const std::bitset<64>& bitset) noexcept {
     m_unlockedAchievements = bitset;
     m_newlyUnlockedAchievements.reset(); // Clear newly unlocked tracking when setting from saved state
 }
 
-void AchievementSystem::incrementProgress(AchievementType type, uint32_t amount) {
+void AchievementSystem::incrementProgress(AchievementType type, uint32_t amount) noexcept {
     if (type == AchievementType::Count) {
         return;
     }
@@ -107,7 +107,7 @@ void AchievementSystem::incrementProgress(AchievementType type, uint32_t amount)
     }
 }
 
-void AchievementSystem::setProgress(AchievementType type, uint32_t progress) {
+void AchievementSystem::setProgress(AchievementType type, uint32_t progress) noexcept {
     if (type == AchievementType::Count) {
         return;
     }
@@ -126,7 +126,7 @@ void AchievementSystem::setProgress(AchievementType type, uint32_t progress) {
     }
 }
 
-uint32_t AchievementSystem::getProgress(AchievementType type) const {
+uint32_t AchievementSystem::getProgress(AchievementType type) const noexcept {
     if (type == AchievementType::Count) {
         return 0;
     }
@@ -139,7 +139,7 @@ uint32_t AchievementSystem::getProgress(AchievementType type) const {
     return m_progress[static_cast<size_t>(type)];
 }
 
-uint32_t AchievementSystem::getRequiredProgress(AchievementType type) {
+uint32_t AchievementSystem::getRequiredProgress(AchievementType type) noexcept {
     if (type == AchievementType::Count) {
         return 0;
     }
@@ -147,7 +147,7 @@ uint32_t AchievementSystem::getRequiredProgress(AchievementType type) {
     return ACHIEVEMENT_REQUIRED_PROGRESS[static_cast<size_t>(type)];
 }
 
-bool AchievementSystem::save(std::ofstream& file) const {
+bool AchievementSystem::save(std::ofstream& file) const noexcept {
     if (!file) {
         return false;
     }
@@ -165,7 +165,7 @@ bool AchievementSystem::save(std::ofstream& file) const {
     return file.good();
 }
 
-bool AchievementSystem::load(std::ifstream& file) {
+bool AchievementSystem::load(std::ifstream& file) noexcept {
     if (!file) {
         return false;
     }

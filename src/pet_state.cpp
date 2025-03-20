@@ -5,6 +5,7 @@
 #include <cstring>
 #include <stdexcept>
 #include <array>
+#include <algorithm>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -15,7 +16,7 @@
 #include <pwd.h>
 #endif
 
-PetState::PetState()
+PetState::PetState() noexcept
     : m_name("Unnamed Pet")
     , m_evolutionLevel(EvolutionLevel::Egg)
     , m_xp(0)
@@ -27,11 +28,11 @@ PetState::PetState()
 {
 }
 
-void PetState::initialize() {
+void PetState::initialize() noexcept {
     initialize("Unnamed Pet");
 }
 
-void PetState::initialize(std::string_view name) {
+void PetState::initialize(std::string_view name) noexcept {
     m_name = name;
     m_evolutionLevel = EvolutionLevel::Egg;
     m_xp = 0;
@@ -44,7 +45,7 @@ void PetState::initialize(std::string_view name) {
     // Initialize achievements - all unlocked = false by default
 }
 
-std::filesystem::path PetState::getStateFilePath() const {
+std::filesystem::path PetState::getStateFilePath() const noexcept {
     std::filesystem::path statePath;
     
 #ifdef _WIN32
@@ -53,7 +54,8 @@ std::filesystem::path PetState::getStateFilePath() const {
     if (SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_APPDATA, NULL, 0, appDataPath))) {
         statePath = std::filesystem::path(appDataPath) / "pet";
     } else {
-        throw std::runtime_error("Could not determine APPDATA directory");
+        // Fallback to current directory if APPDATA is not available
+        statePath = std::filesystem::current_path() / "pet";
     }
 #else
     // Linux: ~/.pet_state
@@ -63,7 +65,9 @@ std::filesystem::path PetState::getStateFilePath() const {
         if (pwd) {
             homeDir = pwd->pw_dir;
         } else {
-            throw std::runtime_error("Could not determine HOME directory");
+            // Fallback to current directory if HOME is not available
+            statePath = std::filesystem::current_path() / ".pet_state";
+            return statePath;
         }
     }
     statePath = std::filesystem::path(homeDir) / ".pet_state";
@@ -77,7 +81,7 @@ std::filesystem::path PetState::getStateFilePath() const {
 #endif
 }
 
-bool PetState::saveFileExists() const {
+bool PetState::saveFileExists() const noexcept {
     try {
         auto statePath = getStateFilePath();
         return std::filesystem::exists(statePath);
@@ -87,7 +91,7 @@ bool PetState::saveFileExists() const {
     }
 }
 
-bool PetState::load() {
+bool PetState::load() noexcept {
     try {
         auto statePath = getStateFilePath();
         
@@ -180,7 +184,7 @@ bool PetState::load() {
     }
 }
 
-bool PetState::save() const {
+bool PetState::save() const noexcept {
     try {
         auto statePath = getStateFilePath();
         
@@ -238,7 +242,7 @@ bool PetState::save() const {
     }
 }
 
-bool PetState::addXP(uint32_t amount) {
+bool PetState::addXP(uint32_t amount) noexcept {
     m_xp += amount;
     
     // Check if we should evolve
@@ -266,69 +270,89 @@ bool PetState::addXP(uint32_t amount) {
     return false; // No evolution
 }
 
-void PetState::increaseHunger(float amount) {
+uint32_t PetState::getXPForNextLevel() const noexcept {
+    // Define XP requirements for each level
+    switch (m_evolutionLevel) {
+        case EvolutionLevel::Egg:
+            return 100;
+        case EvolutionLevel::Baby:
+            return 300;
+        case EvolutionLevel::Child:
+            return 600;
+        case EvolutionLevel::Teen:
+            return 1000;
+        case EvolutionLevel::Adult:
+            return 2000;
+        case EvolutionLevel::Master:
+            return 5000;
+        case EvolutionLevel::Ancient:
+        default:
+            return UINT32_MAX; // No more evolution
+    }
+}
+
+void PetState::increaseHunger(float amount) noexcept {
     float oldHunger = m_hunger;
-    m_hunger = std::min<float>(100.0f, m_hunger + amount);
+    m_hunger += amount;
+    
+    // Cap at 100
+    if (m_hunger > 100.0f) {
+        m_hunger = 100.0f;
+    }
+    
     // Check for achievement
     if (oldHunger < 99.0f && m_hunger >= 100.0f) {
         m_achievementSystem.unlock(AchievementType::WellFed);
     }
 }
 
-void PetState::decreaseHunger(float amount) {
-    m_hunger = std::max<float>(0.0f, m_hunger - amount);
+void PetState::decreaseHunger(float amount) noexcept {
+    m_hunger = (m_hunger > amount) ? (m_hunger - amount) : 0.0f;
 }
 
-void PetState::increaseHappiness(float amount) {
+void PetState::increaseHappiness(float amount) noexcept {
     float oldHappiness = m_happiness;
-    m_happiness = std::min<float>(100.0f, m_happiness + amount);
+    m_happiness += amount;
+    
+    // Cap at 100
+    if (m_happiness > 100.0f) {
+        m_happiness = 100.0f;
+    }
+    
     // Check for achievement
     if (oldHappiness < 99.0f && m_happiness >= 100.0f) {
         m_achievementSystem.unlock(AchievementType::HappyDays);
     }
 }
 
-void PetState::decreaseHappiness(float amount) {
-    m_happiness = std::max<float>(0.0f, m_happiness - amount);
+void PetState::decreaseHappiness(float amount) noexcept {
+    m_happiness = (m_happiness > amount) ? (m_happiness - amount) : 0.0f;
 }
 
-void PetState::increaseEnergy(float amount) {
+void PetState::increaseEnergy(float amount) noexcept {
     float oldEnergy = m_energy;
-    m_energy = std::min<float>(100.0f, m_energy + amount);
+    m_energy += amount;
+    
+    // Cap at 100
+    if (m_energy > 100.0f) {
+        m_energy = 100.0f;
+    }
+    
     // Check for achievement
     if (oldEnergy < 99.0f && m_energy >= 100.0f) {
         m_achievementSystem.unlock(AchievementType::FullyRested);
     }
 }
 
-void PetState::decreaseEnergy(float amount) {
-    m_energy = std::max<float>(0.0f, m_energy - amount);
+void PetState::decreaseEnergy(float amount) noexcept {
+    m_energy = (m_energy > amount) ? (m_energy - amount) : 0.0f;
 }
 
-void PetState::updateInteractionTime() {
+void PetState::updateInteractionTime() noexcept {
     m_lastInteractionTime = std::chrono::system_clock::now();
 }
 
-uint32_t PetState::getXPForNextLevel() const {
-    // XP required for each evolution level
-    static const std::array<uint32_t, 6> xpRequirements = {
-        100,   // Egg -> Baby
-        300,   // Baby -> Child
-        600,   // Child -> Teen
-        1000,  // Teen -> Adult
-        2000,  // Adult -> Master
-        10000  // Master -> Ancient
-    };
-    
-    uint8_t currentLevel = static_cast<uint8_t>(m_evolutionLevel);
-    if (currentLevel >= xpRequirements.size()) {
-        return UINT32_MAX; // No more evolution possible
-    }
-    
-    return xpRequirements[currentLevel];
-}
-
-std::string_view PetState::getAsciiArt() const {
+std::string_view PetState::getAsciiArt() const noexcept {
     // Using string_view for better performance with string literals
     static const std::string eggArt = R"(
   .-.
@@ -398,7 +422,7 @@ std::string_view PetState::getAsciiArt() const {
     }
 }
 
-std::string_view PetState::getDescription() const {
+std::string_view PetState::getDescription() const noexcept {
     // Using string_view for better performance with string literals
     static const std::string eggDesc = "A mysterious egg. It seems to be moving slightly...";
     static const std::string babyDesc = "A tiny, adorable creature has hatched! It looks at you with curious eyes.";
@@ -429,7 +453,7 @@ std::string_view PetState::getDescription() const {
     }
 }
 
-std::string_view PetState::getStatusDescription() const {
+std::string_view PetState::getStatusDescription() const noexcept {
     // More detailed and organic status descriptions for each evolution stage
     static const std::string eggStatus = "A mysterious egg. It seems to be moving slightly...";
     static const std::string babyStatus = "A tiny, adorable creature has hatched! It looks at you with curious eyes.";

@@ -13,25 +13,25 @@ public:
      * @brief Constructor
      * @param petState Reference to the pet state
      */
-    explicit AchievementManager(PetState& petState);
+    explicit AchievementManager(PetState& petState) noexcept;
 
     /**
      * @brief Display unlocked achievements
      * @param newlyUnlocked Whether to only show newly unlocked achievements
      * @return True if any achievements were displayed
      */
-    bool displayAchievements(bool newlyUnlocked = false) const;
+    bool displayAchievements(bool newlyUnlocked = false) const noexcept;
 
     /**
      * @brief Display newly unlocked achievements
      * @return True if any achievements were displayed
      */
-    bool displayNewlyUnlockedAchievements();
+    bool displayNewlyUnlockedAchievements() noexcept;
 
     /**
      * @brief Show all achievements, including locked ones with progress
      */
-    void showAllAchievements() const;
+    void showAllAchievements() const noexcept;
 
 private:
     // Reference to the pet state
