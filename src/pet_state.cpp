@@ -368,13 +368,13 @@ std::string_view PetState::getAsciiArt() const {
    ""   ""
 )";
     static const std::string ancientArt = R"(
-       .     .
-       |\-=-/|
-    /| |O _ O| |\
-  /' \ \_^-^_/ / `\
-/'    \-/ ~ \-/    `\
-|      /\\ //\      |
- \|\|\/-""-""-\/|/|/
+        .     .
+        |\-=-/|
+     /| |O _ O| |\
+   /' \ \_^-^_/ / `\
+ /'    \-/ ~ \-/    `\
+ |      /\\ //\      |
+  \|\|\/-""-""-\/|/|/
 )";
 
     switch (m_evolutionLevel) {
