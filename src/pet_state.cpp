@@ -110,7 +110,7 @@ bool PetState::load() noexcept {
         uint8_t version = 0;
         file.read(reinterpret_cast<char*>(&version), sizeof(version));
         
-        if (version > 3) {
+        if (version > 4) {
             std::cerr << "Unsupported state file version: " << static_cast<int>(version) << std::endl;
             return false;
         }
@@ -281,24 +281,8 @@ bool PetState::addXP(uint32_t amount) noexcept {
 }
 
 uint32_t PetState::getXPForNextLevel() const noexcept {
-    // Define XP requirements for each level
-    switch (m_evolutionLevel) {
-        case EvolutionLevel::Egg:
-            return 100;
-        case EvolutionLevel::Baby:
-            return 300;
-        case EvolutionLevel::Child:
-            return 600;
-        case EvolutionLevel::Teen:
-            return 1000;
-        case EvolutionLevel::Adult:
-            return 2000;
-        case EvolutionLevel::Master:
-            return 5000;
-        case EvolutionLevel::Ancient:
-        default:
-            return UINT32_MAX; // No more evolution
-    }
+    // Get XP requirements from GameConfig
+    return GameConfig::getEvolutionXPRequirement(static_cast<uint8_t>(m_evolutionLevel));
 }
 
 void PetState::increaseHunger(float amount) noexcept {
