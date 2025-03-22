@@ -95,6 +95,9 @@ public:
      */
     void trackCommand(const std::string& command) noexcept;
 
+    // Get reference to the pet state object
+    PetState& getPetState() noexcept { return m_petState; }
+
 private:
     // Reference to the pet state
     PetState& m_petState;
