@@ -121,6 +121,13 @@ bool UIManager::processCommand(const std::vector<std::string_view>& args) noexce
         return false;
     }
     
+    // Check if the command is "new" - we don't allow it in interactive mode
+    if (args[0] == "new") {
+        std::cout << "The 'new' command is not available in interactive mode.\n";
+        std::cout << "Please exit the application and use 'pet new' from the command line." << std::endl;
+        return true; // Return true to indicate the command was processed (even though rejected)
+    }
+    
     // Check if GameLogic object still exists
     if (auto gameLogic = m_gameLogic.lock()) {
         // If object exists, use base implementation for command processing
