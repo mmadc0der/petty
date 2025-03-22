@@ -68,7 +68,7 @@ void DisplayManager::displayPetHeader() const noexcept {
               << static_cast<int>(maxStatValue) << std::endl;
     std::cout << "  Energy: " << static_cast<int>(std::floor(m_petState.getEnergy())) << " / "
               << static_cast<int>(maxStatValue) << std::endl;
-    std::cout << "  XP: " << m_petState.getXP() << std::endl;
+    std::cout << "  XP: " << m_petState.getXP();
     
     if (m_petState.getEvolutionLevel() != EvolutionLevel::Ancient) {
         std::cout << " / " << m_petState.getXPForNextLevel() << " for next level";

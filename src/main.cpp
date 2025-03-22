@@ -101,7 +101,6 @@ int main(int argc, char* argv[]) {
         
         // Process the command
         bool success = parser->processCommand(args, *gameLogic);
-        std::cout << "Command processing result: " << (success ? "success" : "failure") << std::endl;
         
         // If the command was not recognized, show help
         if (!success) {

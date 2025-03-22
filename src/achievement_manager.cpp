@@ -101,30 +101,30 @@ void AchievementManager::showAllAchievements() const noexcept {
     if (std::find(unlockedAchievements.begin(), unlockedAchievements.end(), AchievementType::WellFed) 
         == unlockedAchievements.end()) {
         hasLockedAchievements = true;
-        auto currentHunger = static_cast<int>(std::floor(m_petState.getHunger()));
+        auto currentHungerPercent = static_cast<int>((m_petState.getHunger() / m_petState.getMaxStatValue()) * 100.0f);
         std::cout << "  - " << AchievementSystem::getName(AchievementType::WellFed) 
                 << ": " << AchievementSystem::getDescription(AchievementType::WellFed) 
-                << " (" << currentHunger << "/100)" << std::endl;
+                << " (" << currentHungerPercent << "/100)" << std::endl;
     }
     
     // Check for happiness-based achievement progress
     if (std::find(unlockedAchievements.begin(), unlockedAchievements.end(), AchievementType::HappyDays) 
         == unlockedAchievements.end()) {
         hasLockedAchievements = true;
-        auto currentHappiness = static_cast<int>(std::floor(m_petState.getHappiness()));
+        auto currentHappinessPercent = static_cast<int>((m_petState.getHappiness() / m_petState.getMaxStatValue()) * 100.0f);
         std::cout << "  - " << AchievementSystem::getName(AchievementType::HappyDays) 
                 << ": " << AchievementSystem::getDescription(AchievementType::HappyDays) 
-                << " (" << currentHappiness << "/100)" << std::endl;
+                << " (" << currentHappinessPercent << "/100)" << std::endl;
     }
     
     // Check for energy-based achievement progress
     if (std::find(unlockedAchievements.begin(), unlockedAchievements.end(), AchievementType::FullyRested) 
         == unlockedAchievements.end()) {
         hasLockedAchievements = true;
-        auto currentEnergy = static_cast<int>(std::floor(m_petState.getEnergy()));
+        auto currentEnergyPercent = static_cast<int>((m_petState.getEnergy() / m_petState.getMaxStatValue()) * 100.0f);
         std::cout << "  - " << AchievementSystem::getName(AchievementType::FullyRested) 
                 << ": " << AchievementSystem::getDescription(AchievementType::FullyRested) 
-                << " (" << currentEnergy << "/100)" << std::endl;
+                << " (" << currentEnergyPercent << "/100)" << std::endl;
     }
     
     // Check for dedicated achievement progress
