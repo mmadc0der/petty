@@ -287,10 +287,9 @@ void PetState::increaseHunger(float amount) noexcept {
         m_hunger = getMaxStatValue();
     }
     
-    // Check for achievement - based on percentage
-    if ((oldHunger / getMaxStatValue()) < 0.99f && (m_hunger / getMaxStatValue()) >= 0.99f) {
-        m_achievementSystem.unlock(AchievementType::WellFed);
-    }
+    // Update progress for achievement - based on percentage (0-100 scale)
+    float percentageNow = (m_hunger / getMaxStatValue()) * 100.0f;
+    m_achievementSystem.setProgress(AchievementType::WellFed, static_cast<uint32_t>(percentageNow));
 }
 
 void PetState::decreaseHunger(float amount) noexcept {
@@ -306,10 +305,9 @@ void PetState::increaseHappiness(float amount) noexcept {
         m_happiness = getMaxStatValue();
     }
     
-    // Check for achievement - based on percentage
-    if ((oldHappiness / getMaxStatValue()) < 0.99f && (m_happiness / getMaxStatValue()) >= 0.99f) {
-        m_achievementSystem.unlock(AchievementType::HappyDays);
-    }
+    // Update progress for achievement - based on percentage (0-100 scale)
+    float percentageNow = (m_happiness / getMaxStatValue()) * 100.0f;
+    m_achievementSystem.setProgress(AchievementType::HappyDays, static_cast<uint32_t>(percentageNow));
 }
 
 void PetState::decreaseHappiness(float amount) noexcept {
@@ -325,10 +323,9 @@ void PetState::increaseEnergy(float amount) noexcept {
         m_energy = getMaxStatValue();
     }
     
-    // Check for achievement - based on percentage
-    if ((oldEnergy / getMaxStatValue()) < 0.99f && (m_energy / getMaxStatValue()) >= 0.99f) {
-        m_achievementSystem.unlock(AchievementType::FullyRested);
-    }
+    // Update progress for achievement - based on percentage (0-100 scale)
+    float percentageNow = (m_energy / getMaxStatValue()) * 100.0f;
+    m_achievementSystem.setProgress(AchievementType::FullyRested, static_cast<uint32_t>(percentageNow));
 }
 
 void PetState::decreaseEnergy(float amount) noexcept {

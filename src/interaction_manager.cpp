@@ -83,12 +83,8 @@ void InteractionManager::playWithPet() noexcept {
     // Update interaction time
     m_petState.updateInteractionTime();
     
-    // Unlock social achievement if first time playing
-    if (m_petState.getAchievementSystem().unlock(AchievementType::Playful)) {
-        std::cout << "\nAchievement unlocked: " 
-                << AchievementSystem::getName(AchievementType::Playful) 
-                << "!" << std::endl;
-    }
+    // Track play count for Playful achievement
+    m_petState.getAchievementSystem().incrementProgress(AchievementType::Playful);
     
     // Display message
     if (evolved) {
@@ -102,9 +98,6 @@ void InteractionManager::playWithPet() noexcept {
     } else {
         m_displayManager.displayMessage("Your pet jumps around playfully. It's having fun!");
     }
-    
-    // Track play count for Playful achievement
-    m_petState.getAchievementSystem().incrementProgress(AchievementType::Playful);
     
     // Check for newly unlocked achievements
     m_achievementManager.displayNewlyUnlockedAchievements();

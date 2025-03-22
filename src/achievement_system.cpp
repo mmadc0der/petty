@@ -187,6 +187,10 @@ bool AchievementSystem::save(std::ofstream& file) const noexcept {
     uint64_t achievementBits = m_unlockedAchievements.to_ullong();
     file.write(reinterpret_cast<const char*>(&achievementBits), sizeof(achievementBits));
     
+    // Write newly unlocked achievements bitset
+    uint64_t newAchievementBits = m_newlyUnlockedAchievements.to_ullong();
+    file.write(reinterpret_cast<const char*>(&newAchievementBits), sizeof(newAchievementBits));
+    
     // Write achievement progress for each achievement
     for (size_t i = 0; i < static_cast<size_t>(AchievementType::Count); ++i) {
         uint32_t progress = m_progress[i];
