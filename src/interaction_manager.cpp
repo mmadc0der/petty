@@ -3,6 +3,7 @@
 #include <iostream>
 #include <algorithm>
 #include <format>
+#include <cmath>
 
 InteractionManager::InteractionManager(
     PetState& petState, 

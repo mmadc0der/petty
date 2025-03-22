@@ -43,7 +43,8 @@ void PetState::initialize(std::string_view name) noexcept {
     m_lastInteractionTime = std::chrono::system_clock::now();
     m_birthDate = std::chrono::system_clock::now();
     
-    // Initialize achievements - all unlocked = false by default
+    // Reset achievements system when creating a new pet
+    m_achievementSystem.reset();
 }
 
 std::filesystem::path PetState::getStateFilePath() const noexcept {
@@ -58,6 +59,7 @@ std::filesystem::path PetState::getStateFilePath() const noexcept {
         // Fallback to current directory if APPDATA is not available
         statePath = std::filesystem::current_path() / "pet";
     }
+    return statePath / "state.dat";
 #else
     // Linux: ~/.pet_state
     const char* homeDir = getenv("HOME");
@@ -67,18 +69,12 @@ std::filesystem::path PetState::getStateFilePath() const noexcept {
             homeDir = pwd->pw_dir;
         } else {
             // Fallback to current directory if HOME is not available
-            statePath = std::filesystem::current_path() / ".pet_state";
-            return statePath;
+            char currentDir[PATH_MAX];
+            getcwd(currentDir, sizeof(currentDir));
+            return std::string(currentDir) + "/.pet_state";
         }
     }
-    statePath = std::filesystem::path(homeDir) / ".pet_state";
-    return statePath;
-#endif
-
-#ifdef _WIN32
-    // Create directory if it doesn't exist
-    std::filesystem::create_directories(statePath);
-    return statePath / "state.dat";
+    return std::string(homeDir) + "/.pet_state";
 #endif
 }
 
@@ -252,9 +248,6 @@ bool PetState::save() const noexcept {
 }
 
 bool PetState::addXP(uint32_t amount) noexcept {
-    uint32_t oldXP = m_xp;
-    EvolutionLevel oldLevel = m_evolutionLevel;
-    
     m_xp += amount;
     
     // Check if we should evolve

@@ -33,7 +33,7 @@ void UIManager::initializeCommandHandlers() noexcept {
     
     // Add specific handlers for UIManager
     // Add help command for interactive mode
-    m_commandHandlers["help"] = [this](GameLogic& gameLogic) -> void {
+    m_commandHandlers["help"] = [this](GameLogic& /* gameLogic */) -> void {
         // Call showHelp method
         this->showHelp();
     };

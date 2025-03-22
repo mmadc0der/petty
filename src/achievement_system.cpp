@@ -178,18 +178,6 @@ void AchievementSystem::trackUniqueCommand(const std::string& command) noexcept 
     }
 }
 
-void AchievementSystem::reset() noexcept {
-    // Сбрасываем все разблокированные достижения
-    m_unlockedAchievements.reset();
-    m_newlyUnlockedAchievements.reset();
-    
-    // Сбрасываем прогресс по всем достижениям
-    std::fill(m_progress.begin(), m_progress.end(), 0);
-    
-    // Очищаем список использованных команд
-    m_usedCommands.clear();
-}
-
 bool AchievementSystem::save(std::ofstream& file) const noexcept {
     if (!file) {
         return false;
@@ -225,32 +213,34 @@ bool AchievementSystem::load(std::ifstream& file) noexcept {
     // Read achievements bitset
     uint64_t achievementBits = 0;
     file.read(reinterpret_cast<char*>(&achievementBits), sizeof(achievementBits));
-    m_unlockedAchievements = achievementBits;
-    m_newlyUnlockedAchievements.reset(); // Clear newly unlocked tracking when setting from saved state
+    m_unlockedAchievements = std::bitset<64>(achievementBits);
     
-    // Read achievement progress for each achievement
+    // Read newly unlocked achievements bitset
+    uint64_t newAchievementBits = 0;
+    file.read(reinterpret_cast<char*>(&newAchievementBits), sizeof(newAchievementBits));
+    m_newlyUnlockedAchievements = std::bitset<64>(newAchievementBits);
+    
+    // Read progress for each achievement
     for (size_t i = 0; i < static_cast<size_t>(AchievementType::Count); ++i) {
         uint32_t progress = 0;
         file.read(reinterpret_cast<char*>(&progress), sizeof(progress));
-        
-        // Only set progress if achievement is not already unlocked
-        AchievementType type = static_cast<AchievementType>(i);
-        if (!isUnlocked(type) && progress > 0) {
-            setProgress(type, progress);
-        }
+        m_progress[i] = progress;
     }
     
-    // Read used commands for Explorer achievement
-    uint32_t usedCommandsSize = 0;
-    file.read(reinterpret_cast<char*>(&usedCommandsSize), sizeof(usedCommandsSize));
-    for (uint32_t i = 0; i < usedCommandsSize; ++i) {
-        uint32_t commandLength = 0;
-        file.read(reinterpret_cast<char*>(&commandLength), sizeof(commandLength));
-        std::string command;
-        command.resize(commandLength);
-        file.read(&command[0], commandLength);
+    // Read used commands count
+    uint32_t commandCount = 0;
+    file.read(reinterpret_cast<char*>(&commandCount), sizeof(commandCount));
+    
+    // Read each command
+    for (uint32_t i = 0; i < commandCount; ++i) {
+        uint32_t length = 0;
+        file.read(reinterpret_cast<char*>(&length), sizeof(length));
+        
+        std::string command(length, ' ');
+        file.read(&command[0], length);
+        
         m_usedCommands.insert(command);
     }
     
-    return file.good();
+    return !file.fail();
 }

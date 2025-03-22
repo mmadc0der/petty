@@ -31,9 +31,6 @@ std::optional<std::string> TimeManager::applyTimeEffects() noexcept {
         return std::nullopt;
     }
     
-    // Get the current maximum stat value for this evolution level
-    float maxStatValue = m_petState.getMaxStatValue();
-    
     // Apply effects based on time passed
     // Calculate raw decreases - rate is given per hour in config
     float hungerDecrease = static_cast<float>(GameConfig::getHungerDecreaseRate() * hoursPassed);

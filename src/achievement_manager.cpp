@@ -1,6 +1,7 @@
 #include "../include/achievement_manager.h"
 #include <iostream>
 #include <algorithm>
+#include <cmath>
 
 AchievementManager::AchievementManager(PetState& petState) noexcept
     : m_petState(petState)

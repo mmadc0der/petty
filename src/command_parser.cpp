@@ -13,7 +13,7 @@ void CommandParser::initializeCommandHandlers() noexcept {
     CommandHandlerBase::initializeCommandHandlers();
     
     // Add help command for command line mode
-    m_commandHandlers["help"] = [](GameLogic& gameLogic) -> void {
+    m_commandHandlers["help"] = [](GameLogic& /* gameLogic */) -> void {
         // This command is special as it doesn't delegate execution to GameLogic
         std::cout << "Virtual Pet Application - Command Line Mode\n"
                   << "------------------------------------------\n"
