@@ -56,13 +56,18 @@ bool CommandParser::processCommand(const std::vector<std::string_view>& args, Ga
 void CommandParser::showHelp() const noexcept {
     std::cout << "Virtual Pet Application - Command Line Mode\n"
               << "------------------------------------------\n"
-              << "Usage: pet [command] [options]\n\n"
-              << "Commands:\n"
+              << "Usage: pet [command] [options]\n\n";
+              
+    // Category 1: Pet Interaction
+    std::cout << "Pet Interaction:\n"
               << "  status       - Show pet status\n"
               << "  feed         - Feed your pet\n"
               << "  play         - Play with your pet\n"
               << "  evolve       - Show evolution progress\n"
-              << "  achievements - Show all achievements and progress\n"
+              << "  achievements - Show all achievements and progress\n\n";
+              
+    // Category 2: Application Management
+    std::cout << "Application Management:\n"
               << "  new [-f]     - Create a new pet (use -f to force overwrite)\n"
               << "  help         - Show this help message\n"
               << "  interactive  - Start interactive mode\n"

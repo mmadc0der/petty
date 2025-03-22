@@ -132,16 +132,19 @@ bool UIManager::processCommand(const std::vector<std::string_view>& args) noexce
 
 void UIManager::showHelp() const noexcept {
     std::cout << "Virtual Pet Application\n"
-              << "----------------------\n"
-              << "Commands:\n"
+              << "----------------------\n\n";
+              
+    // Category 1: Pet Interaction
+    std::cout << "Pet Interaction:\n"
               << "  status       - Show pet status\n"
               << "  feed         - Feed your pet\n"
               << "  play         - Play with your pet\n"
               << "  evolve       - Show evolution progress\n"
-              << "  achievements - Show all achievements and progress\n"
-              << "  new          - Create a new pet\n"
-              << "  help         - Show this help message\n"
+              << "  achievements - Show all achievements and progress\n\n";
+              
+    // Category 2: Interface Management
+    std::cout << "Interface Management:\n"
               << "  clear        - Clear the screen\n"
-              << "  exit         - Exit the application\n"
-              << std::endl;
+              << "  help         - Show this help message\n"
+              << "  exit         - Exit the application\n\n";
 }
