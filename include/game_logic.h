@@ -89,6 +89,12 @@ public:
      */
     void displayNewlyUnlockedAchievements();
 
+    /**
+     * @brief Track a command for the Explorer achievement
+     * @param command The command string
+     */
+    void trackCommand(const std::string& command) noexcept;
+
 private:
     // Reference to the pet state
     PetState& m_petState;

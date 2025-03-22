@@ -1,11 +1,14 @@
 #include "../include/achievement_system.h"
 #include <iostream>
 #include <algorithm>
+#include <set>
+#include <string>
 
 AchievementSystem::AchievementSystem() noexcept
     : m_unlockedAchievements(0), 
       m_newlyUnlockedAchievements(0),
-      m_progress{}
+      m_progress{},
+      m_usedCommands{}
 {
     // Initialize progress array to zeros
     std::fill(m_progress.begin(), m_progress.end(), 0);
@@ -147,6 +150,46 @@ uint32_t AchievementSystem::getRequiredProgress(AchievementType type) noexcept {
     return ACHIEVEMENT_REQUIRED_PROGRESS[static_cast<size_t>(type)];
 }
 
+void AchievementSystem::trackUniqueCommand(const std::string& command) noexcept {
+    // Only basic commands from the help menu should be considered for the Explorer achievement
+    static const std::set<std::string> validCommands = {
+        "status", "feed", "play", "evolve", "achievements", "help", "clear"
+    };
+    
+    // Skip the command if it's not one of the main commands
+    if (validCommands.find(command) == validCommands.end()) {
+        return;
+    }
+    
+    // If achievement is already unlocked, do nothing
+    if (isUnlocked(AchievementType::Explorer)) {
+        return;
+    }
+    
+    // Add command to the list of used commands
+    m_usedCommands.insert(command);
+    
+    // If the user has used all commands, unlock the achievement
+    if (m_usedCommands.size() >= validCommands.size()) {
+        unlock(AchievementType::Explorer);
+    } else {
+        // Update progress for the Explorer achievement
+        setProgress(AchievementType::Explorer, static_cast<uint32_t>(m_usedCommands.size()));
+    }
+}
+
+void AchievementSystem::reset() noexcept {
+    // Сбрасываем все разблокированные достижения
+    m_unlockedAchievements.reset();
+    m_newlyUnlockedAchievements.reset();
+    
+    // Сбрасываем прогресс по всем достижениям
+    std::fill(m_progress.begin(), m_progress.end(), 0);
+    
+    // Очищаем список использованных команд
+    m_usedCommands.clear();
+}
+
 bool AchievementSystem::save(std::ofstream& file) const noexcept {
     if (!file) {
         return false;
@@ -160,6 +203,15 @@ bool AchievementSystem::save(std::ofstream& file) const noexcept {
     for (size_t i = 0; i < static_cast<size_t>(AchievementType::Count); ++i) {
         uint32_t progress = m_progress[i];
         file.write(reinterpret_cast<const char*>(&progress), sizeof(progress));
+    }
+    
+    // Write used commands for Explorer achievement
+    uint32_t usedCommandsSize = static_cast<uint32_t>(m_usedCommands.size());
+    file.write(reinterpret_cast<const char*>(&usedCommandsSize), sizeof(usedCommandsSize));
+    for (const auto& command : m_usedCommands) {
+        uint32_t commandLength = static_cast<uint32_t>(command.length());
+        file.write(reinterpret_cast<const char*>(&commandLength), sizeof(commandLength));
+        file.write(command.c_str(), commandLength);
     }
     
     return file.good();
@@ -186,6 +238,18 @@ bool AchievementSystem::load(std::ifstream& file) noexcept {
         if (!isUnlocked(type) && progress > 0) {
             setProgress(type, progress);
         }
+    }
+    
+    // Read used commands for Explorer achievement
+    uint32_t usedCommandsSize = 0;
+    file.read(reinterpret_cast<char*>(&usedCommandsSize), sizeof(usedCommandsSize));
+    for (uint32_t i = 0; i < usedCommandsSize; ++i) {
+        uint32_t commandLength = 0;
+        file.read(reinterpret_cast<char*>(&commandLength), sizeof(commandLength));
+        std::string command;
+        command.resize(commandLength);
+        file.read(&command[0], commandLength);
+        m_usedCommands.insert(command);
     }
     
     return file.good();

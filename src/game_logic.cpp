@@ -110,3 +110,8 @@ void GameLogic::runInteractiveMode() noexcept {
     // Run UI manager's interactive mode
     m_uiManager->runInteractiveMode();
 }
+
+void GameLogic::trackCommand(const std::string& command) noexcept {
+    // Pass the command to the achievement system for tracking
+    m_petState.getAchievementSystem().trackUniqueCommand(command);
+}

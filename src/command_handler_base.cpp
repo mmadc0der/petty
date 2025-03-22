@@ -43,6 +43,9 @@ bool CommandHandlerBase::processCommand(const std::vector<std::string_view>& arg
     
     auto it = m_commandHandlers.find(lowerCommand);
     if (it != m_commandHandlers.end()) {
+        // Отслеживаем команду для достижения Explorer
+        gameLogic.trackCommand(std::string(lowerCommand));
+        
         it->second(gameLogic);
         return true;
     }

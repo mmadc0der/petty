@@ -7,6 +7,8 @@
 #include <bitset>
 #include <optional>
 #include <fstream>
+#include <set>
+#include <string>
 
 /**
  * @brief Enumeration of all possible achievements in the game
@@ -134,9 +136,9 @@ public:
     void setProgress(AchievementType type, uint32_t progress) noexcept;
     
     /**
-     * @brief Get progress for an achievement
-     * @param type The achievement type
-     * @return The current progress
+     * @brief Check if the achievement has specific progress
+     * @param type Type of achievement to check
+     * @return Current progress value (or 0 if type is invalid)
      */
     uint32_t getProgress(AchievementType type) const noexcept;
     
@@ -146,6 +148,24 @@ public:
      * @return The total required progress
      */
     static uint32_t getRequiredProgress(AchievementType type) noexcept;
+    
+    /**
+     * @brief Reset achievement system to default state
+     * Clears all unlocked achievements, progress and used commands
+     */
+    void reset() noexcept {
+        m_unlockedAchievements.reset();
+        m_newlyUnlockedAchievements.reset();
+        m_progress.fill(0);
+        m_usedCommands.clear();
+        m_progress.fill(0);
+    }
+    
+    /**
+     * @brief Track a unique command for the Explorer achievement
+     * @param command The command string to track
+     */
+    void trackUniqueCommand(const std::string& command) noexcept;
     
     /**
      * @brief Save achievement data to a file stream
@@ -170,6 +190,9 @@ private:
     
     // Progress tracking for achievements that require multiple steps
     std::array<uint32_t, static_cast<size_t>(AchievementType::Count)> m_progress;
+    
+    // Set to track used commands for the Explorer achievement
+    std::set<std::string> m_usedCommands;
     
     // Static array of achievement names
     static constexpr std::array<std::string_view, static_cast<size_t>(AchievementType::Count)> ACHIEVEMENT_NAMES = {
@@ -211,7 +234,7 @@ private:
         1,  // Master
         5,  // Playful
         7,  // Dedicated
-        1,  // Explorer
+        7,  // Explorer
         30,  // Survivor
         1  // Eternal
     };

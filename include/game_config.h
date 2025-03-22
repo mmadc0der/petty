@@ -133,7 +133,7 @@ namespace GameConfig {
             // Default preset values
             namespace Default {
                 constexpr float HUNGER_INCREASE = 12.0f;
-                constexpr uint32_t XP_GAIN = 10;
+                constexpr uint32_t XP_GAIN = 100;
             }
             
             // Easy preset values
@@ -161,7 +161,7 @@ namespace GameConfig {
             namespace Default {
                 constexpr float HAPPINESS_INCREASE = 12.0f;
                 constexpr float ENERGY_DECREASE = 8.0f;
-                constexpr uint32_t XP_GAIN = 15;
+                constexpr uint32_t XP_GAIN = 1500;
             }
             
             // Easy preset values
@@ -188,6 +188,19 @@ namespace GameConfig {
     }
 
     /**
+     * @brief XP requirements for each evolution level
+     */
+    namespace EvolutionXP {
+        constexpr uint32_t EGG_TO_BABY = 400;
+        constexpr uint32_t BABY_TO_CHILD = 800;
+        constexpr uint32_t CHILD_TO_TEEN = 1200;
+        constexpr uint32_t TEEN_TO_ADULT = 2000;
+        constexpr uint32_t ADULT_TO_MASTER = 4000;
+        constexpr uint32_t MASTER_TO_ANCIENT = 12000;
+        constexpr uint32_t ANCIENT_MAX = UINT32_MAX; // No more evolution
+    }
+
+    /**
      * @brief Get the maximum stat value based on evolution level
      * @param evolutionLevel The current evolution level of the pet
      * @return Maximum stat value for the given evolution level
@@ -210,6 +223,32 @@ namespace GameConfig {
                 return MaxStats::ANCIENT_MAX_STAT;
             default:
                 return MaxStats::EGG_MAX_STAT;
+        }
+    }
+
+    /**
+     * @brief Get the XP required for the next evolution level
+     * @param currentLevel The current evolution level of the pet
+     * @return XP required for the next evolution level
+     */
+    constexpr uint32_t getEvolutionXPRequirement(uint8_t currentLevel) {
+        switch (currentLevel) {
+            case 0: // Egg to Baby
+                return EvolutionXP::EGG_TO_BABY;
+            case 1: // Baby to Child
+                return EvolutionXP::BABY_TO_CHILD;
+            case 2: // Child to Teen
+                return EvolutionXP::CHILD_TO_TEEN;
+            case 3: // Teen to Adult
+                return EvolutionXP::TEEN_TO_ADULT;
+            case 4: // Adult to Master
+                return EvolutionXP::ADULT_TO_MASTER;
+            case 5: // Master to Ancient
+                return EvolutionXP::MASTER_TO_ANCIENT;
+            case 6: // Ancient (no more evolution)
+                return EvolutionXP::ANCIENT_MAX;
+            default:
+                return EvolutionXP::EGG_TO_BABY;
         }
     }
 
