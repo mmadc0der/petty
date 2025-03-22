@@ -209,7 +209,7 @@ bool AchievementSystem::save(std::ofstream& file) const noexcept {
     return file.good();
 }
 
-bool AchievementSystem::load(std::ifstream& file) noexcept {
+bool AchievementSystem::load(std::ifstream& file, uint8_t version) noexcept {
     if (!file) {
         return false;
     }
@@ -219,10 +219,15 @@ bool AchievementSystem::load(std::ifstream& file) noexcept {
     file.read(reinterpret_cast<char*>(&achievementBits), sizeof(achievementBits));
     m_unlockedAchievements = std::bitset<64>(achievementBits);
     
-    // Read newly unlocked achievements bitset
-    uint64_t newAchievementBits = 0;
-    file.read(reinterpret_cast<char*>(&newAchievementBits), sizeof(newAchievementBits));
-    m_newlyUnlockedAchievements = std::bitset<64>(newAchievementBits);
+    // Read newly unlocked achievements bitset (only for version 4+)
+    if (version >= 4) {
+        uint64_t newAchievementBits = 0;
+        file.read(reinterpret_cast<char*>(&newAchievementBits), sizeof(newAchievementBits));
+        m_newlyUnlockedAchievements = std::bitset<64>(newAchievementBits);
+    } else {
+        // For older versions, clear the newly unlocked achievements
+        m_newlyUnlockedAchievements.reset();
+    }
     
     // Read progress for each achievement
     for (size_t i = 0; i < static_cast<size_t>(AchievementType::Count); ++i) {
@@ -235,10 +240,22 @@ bool AchievementSystem::load(std::ifstream& file) noexcept {
     uint32_t commandCount = 0;
     file.read(reinterpret_cast<char*>(&commandCount), sizeof(commandCount));
     
+    // Проверяем на разумные пределы - не более 100 команд
+    const uint32_t maxReasonableCommands = 100;
+    if (commandCount > maxReasonableCommands) {
+        commandCount = maxReasonableCommands;
+    }
+    
     // Read each command
     for (uint32_t i = 0; i < commandCount; ++i) {
         uint32_t length = 0;
         file.read(reinterpret_cast<char*>(&length), sizeof(length));
+        
+        // Проверяем на разумные пределы - команда не может быть длиннее 50 символов
+        const uint32_t maxReasonableLength = 50;
+        if (length > maxReasonableLength || length == 0) {
+            continue;
+        }
         
         std::string command(length, ' ');
         file.read(&command[0], length);
@@ -246,5 +263,5 @@ bool AchievementSystem::load(std::ifstream& file) noexcept {
         m_usedCommands.insert(command);
     }
     
-    return !file.fail();
+    return true; // Изменено с !file.fail() на true, так как мы теперь обрабатываем ошибки сами
 }

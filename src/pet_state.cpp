@@ -147,7 +147,6 @@ bool PetState::load() noexcept {
         // Read last interaction time
         uint64_t lastInteractionSeconds = 0;
         file.read(reinterpret_cast<char*>(&lastInteractionSeconds), sizeof(lastInteractionSeconds));
-        
         m_lastInteractionTime = std::chrono::system_clock::time_point(
             std::chrono::seconds(lastInteractionSeconds));
         
@@ -155,17 +154,16 @@ bool PetState::load() noexcept {
         if (version >= 2) {
             uint64_t birthDateSeconds = 0;
             file.read(reinterpret_cast<char*>(&birthDateSeconds), sizeof(birthDateSeconds));
-            
             m_birthDate = std::chrono::system_clock::time_point(
                 std::chrono::seconds(birthDateSeconds));
         } else {
-            // For older versions, set birth date to now
+            // For old versions, set to current time
             m_birthDate = std::chrono::system_clock::now();
         }
         
         // Read achievement progress if version >= 2
         if (version >= 2) {
-            if (!m_achievementSystem.load(file)) {
+            if (!m_achievementSystem.load(file, version)) {
                 std::cerr << "Failed to load achievement progress" << std::endl;
                 return false;
             }
@@ -279,7 +277,6 @@ uint32_t PetState::getXPForNextLevel() const noexcept {
 }
 
 void PetState::increaseHunger(float amount) noexcept {
-    float oldHunger = m_hunger;
     m_hunger += amount;
     
     // Cap at max
@@ -297,7 +294,6 @@ void PetState::decreaseHunger(float amount) noexcept {
 }
 
 void PetState::increaseHappiness(float amount) noexcept {
-    float oldHappiness = m_happiness;
     m_happiness += amount;
     
     // Cap at max
@@ -315,7 +311,6 @@ void PetState::decreaseHappiness(float amount) noexcept {
 }
 
 void PetState::increaseEnergy(float amount) noexcept {
-    float oldEnergy = m_energy;
     m_energy += amount;
     
     // Cap at max

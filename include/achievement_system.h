@@ -177,9 +177,10 @@ public:
     /**
      * @brief Load achievement data from a file stream
      * @param file The input file stream
+     * @param version The version of the file
      * @return true if loaded successfully, false otherwise
      */
-    bool load(std::ifstream& file) noexcept;
+    bool load(std::ifstream& file, uint8_t version = 4) noexcept;
     
 private:
     // Bitset to store unlocked achievements (64 bits allows for future expansion)
