@@ -120,40 +120,9 @@ void InteractionManager::showStatus() const noexcept {
     
     auto now = std::chrono::system_clock::now();
     auto birthDate = m_petState.getBirthDate();
-    
-    auto birthTime_t = std::chrono::system_clock::to_time_t(birthDate);
-    std::tm birthTm;
-#ifdef _WIN32
-    localtime_s(&birthTm, &birthTime_t);
-#else
-    localtime_r(&birthTime_t, &birthTm);
-#endif
-    
-    char birthDateStr[20];
-    std::strftime(birthDateStr, sizeof(birthDateStr), "%d %b %Y", &birthTm);
-
-    auto age = std::chrono::duration_cast<std::chrono::hours>(now - birthDate).count();
-    int ageYears = age / (24 * 365);
-    int ageDays = (age % (24 * 365)) / 24;
-    
-    std::cout << "Birth date: " << birthDateStr;
-    std::cout << " (";
-    if (ageYears > 0) {
-        std::cout << ageYears << "y";
-        if (ageDays > 0) {
-            std::cout << " ";
-        }
-    }
-    if (ageDays > 0) {
-        std::cout << ageDays << "d";
-    } else {
-        std::cout << age << "h";
-    }
-    std::cout << ")";
-    std::cout << std::endl;
-    
     auto lastInteraction = m_petState.getLastInteractionTime();
     
+    // Handle last interaction time
     auto lastInteractionTime_t = std::chrono::system_clock::to_time_t(lastInteraction);
     std::tm lastInteractionTm;
 #ifdef _WIN32
@@ -185,6 +154,38 @@ void InteractionManager::showStatus() const noexcept {
         }
     }
     std::cout << minutes << "m";
+    std::cout << ")";
+    std::cout << std::endl;
+    
+    // Handle birth date
+    auto birthTime_t = std::chrono::system_clock::to_time_t(birthDate);
+    std::tm birthTm;
+#ifdef _WIN32
+    localtime_s(&birthTm, &birthTime_t);
+#else
+    localtime_r(&birthTime_t, &birthTm);
+#endif
+    
+    char birthDateStr[20];
+    std::strftime(birthDateStr, sizeof(birthDateStr), "%d %b %Y", &birthTm);
+
+    // Calculate age in days and years
+    auto age = std::chrono::duration_cast<std::chrono::hours>(now - birthDate).count();
+    int ageYears = age / (24 * 365);
+    int ageDays = (age % (24 * 365)) / 24;
+    
+    std::cout << "Birth date: " << birthDateStr;
+    std::cout << " (";
+    if (ageYears > 0) {
+        std::cout << ageYears << "y";
+        if (ageDays > 0) {
+            std::cout << " ";
+        }
+    }
+    
+    // Always show days, even if 0 days
+    std::cout << ageDays << "d";
+    
     std::cout << ")";
     std::cout << std::endl << std::endl;
 }
