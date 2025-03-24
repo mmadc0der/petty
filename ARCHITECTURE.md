@@ -3,39 +3,186 @@
 
 ## Module Interactions
 
+### Core Component Interactions
+
+The Petty application follows a component-based architecture where each module has specific responsibilities and communicates with other modules through well-defined interfaces. Below is a detailed description of how these modules interact with each other:
+
+#### GameLogic as the Central Coordinator
+
+`GameLogic` serves as the central coordinator for all other components. It:
+
+1. **Initializes and Owns Other Components**:
+   ```cpp
+   // In GameLogic constructor
+   m_displayManager = std::make_unique<DisplayManager>(m_petState);
+   m_achievementManager = std::make_unique<AchievementManager>(m_petState);
+   m_interactionManager = std::make_unique<InteractionManager>(m_petState, *m_displayManager, *m_achievementManager);
+   m_timeManager = std::make_unique<TimeManager>(m_petState);
+   ```
+
+2. **Delegates User Commands**:
+   - When a user issues a command (e.g., "feed"), `GameLogic` delegates to the appropriate component:
+   ```cpp
+   // In GameLogic::feedPet()
+   void GameLogic::feedPet() noexcept {
+       auto timeMessage = m_timeManager->applyTimeEffects();
+       if (timeMessage) {
+           m_displayManager->displayMessage(*timeMessage);
+       }
+       m_interactionManager->feedPet();
+       displayNewlyUnlockedAchievements();
+       m_petState.save();
+   }
+   ```
+
+3. **Manages Application Flow**:
+   - Controls the sequence of operations during interactions
+   - Ensures state is saved after significant actions
+   - Coordinates time effects application before interactions
+
+#### Data Flow Between Components
+
+1. **PetState → Other Components**:
+   - `PetState` is the central data store that other components read from and write to
+   - Components like `DisplayManager`, `InteractionManager`, and `AchievementManager` receive a reference to `PetState` in their constructors
+   - Example data flow: When `InteractionManager::feedPet()` is called, it modifies hunger in `PetState` and adds XP
+
+2. **TimeManager → PetState**:
+   - `TimeManager` calculates time-based effects and applies them to `PetState`
+   - It reads the last interaction time from `PetState` and updates stats based on elapsed time
+   ```cpp
+   // In TimeManager::applyTimeEffects()
+   auto now = std::chrono::system_clock::now();
+   auto lastInteraction = m_petState.getLastInteractionTime();
+   auto duration = std::chrono::duration_cast<std::chrono::hours>(now - lastInteraction);
+   
+   if (duration.count() > 0) {
+       m_petState.decreaseHunger(GameConfig::getHungerDecreaseRate() * duration.count());
+       m_petState.decreaseHappiness(GameConfig::getHappinessDecreaseRate() * duration.count());
+       m_petState.increaseEnergy(GameConfig::getEnergyIncreaseRate() * duration.count());
+   }
+   ```
+
+3. **InteractionManager → AchievementManager**:
+   - After interactions, `InteractionManager` triggers achievement checks in `AchievementManager`
+   - Example: After feeding, it checks if the "WellFed" achievement should be unlocked
+   ```cpp
+   // In InteractionManager::feedPet()
+   void InteractionManager::feedPet() noexcept {
+       // Update pet stats
+       m_petState.increaseHunger(GameConfig::getFeedingHungerIncrease());
+       m_petState.addXP(GameConfig::getFeedingXPGain());
+       
+       // Trigger achievement check
+       if (!m_petState.getAchievementSystem().isUnlocked(AchievementType::FirstSteps)) {
+           m_petState.getAchievementSystem().unlock(AchievementType::FirstSteps);
+       }
+   }
+   ```
+
+4. **UIManager → GameLogic**:
+   - `UIManager` processes user input and calls appropriate methods on `GameLogic`
+   - It maintains a weak reference to `GameLogic` to avoid circular dependencies
+   ```cpp
+   // In UIManager::processCommand()
+   bool UIManager::processCommand(const std::vector<std::string_view>& args) noexcept {
+       if (auto gameLogic = m_gameLogic.lock()) {
+           gameLogic->trackCommand(std::string(args[0]));
+           return CommandHandlerBase::processCommand(args, *gameLogic);
+       }
+       return false;
+   }
+   ```
+
+#### Event Flow and State Updates
+
+1. **Command Execution Flow**:
+   ```
+   User Input → UIManager → GameLogic → InteractionManager → PetState → AchievementSystem
+                                      ↓
+                                 DisplayManager
+   ```
+
+2. **Time Effect Flow**:
+   ```
+   GameLogic → TimeManager → PetState → DisplayManager (for warnings)
+   ```
+
+3. **Achievement Unlock Flow**:
+   ```
+   InteractionManager → AchievementSystem → AchievementManager → DisplayManager
+   ```
+
+### Configuration and Persistence Layer
+
+1. **GameConfig Integration**:
+   - All components access game parameters through the `GameConfig` namespace
+   - This creates a consistent configuration layer across the application
+   - Example: `TimeManager` uses `GameConfig::getHungerDecreaseRate()` to determine stat decay
+
+2. **Persistence Flow**:
+   - `GameLogic` initiates save operations after significant interactions
+   - `PetState` handles the actual serialization of pet data
+   - `AchievementSystem` has its own save/load methods called by `PetState`
+   ```cpp
+   // In PetState::save()
+   bool PetState::save() const noexcept {
+       std::ofstream file(m_saveFilePath, std::ios::binary);
+       if (!file) {
+           return false;
+       }
+       
+       // Write version and basic pet data
+       uint8_t version = 4;
+       file.write(reinterpret_cast<const char*>(&version), sizeof(version));
+       // ... write other pet data ...
+       
+       // Save achievements
+       m_achievementSystem.save(file);
+       
+       return true;
+   }
+   ```
+
+### Error Handling and Robustness
+
+1. **Graceful Degradation**:
+   - Components use `noexcept` to prevent exceptions from propagating
+   - File operations return boolean success indicators rather than throwing exceptions
+   - Example: `PetState::load()` returns false if the save file cannot be opened
+
+2. **Defensive Programming**:
+   - Stats are bounded to prevent invalid values
+   - Time calculations handle edge cases like system time changes
+   - Commands are processed case-insensitively for better user experience
+
+### Dependency Graph
+
+The following diagram illustrates the dependency relationships between components:
+
 ```
-┌────────────────┐      Requests      ┌──────────────────┐
-│   GameLogic    │◄──────────────────►│    PetState      │
-└───────┬────────┘    Parameters      └────────┬─────────┘
-        │                                      │
-        ▼                                      ▼
-┌────────────────┐      Display       ┌──────────────────┐
-│  UIManager     │◄──────────────────►│ DisplayManager   │
-└───────┬────────┘      Status        └────────┬─────────┘
-        │                                      │
-        ▼                                      ▼
-┌────────────────┐    Temporal       ┌──────────────────┐
-│ TimeManager    │◄─────────────────►│ AchievementSystem│
-└────────────────┘    Processing     └──────────────────┘
+                  ┌───────────────┐
+                  │  GameConfig   │
+                  └───────┬───────┘
+                          │
+                          ▼
+┌───────────┐     ┌───────────────┐     ┌───────────────┐
+│ UIManager │◄────┤   GameLogic   │────►│ DisplayManager│
+└─────┬─────┘     └───────┬───────┘     └───────────────┘
+      │                   │
+      │           ┌───────┴───────┐
+      │           │               │
+      │     ┌─────▼─────┐   ┌─────▼─────┐
+      └────►│ PetState  │◄──┤TimeManager│
+            └─────┬─────┘   └───────────┘
+                  │
+            ┌─────▼─────┐
+            │Achievement│
+            │  System   │
+            └───────────┘
 ```
 
-**Interaction Details:**
-1. **GameLogic → PetState**
-   - The main controller requests and updates the pet's state
-   - It handles the pet's evolution and progress towards achievements
-
-2. **GameLogic ↔ UIManager**
-   - The game logic translates game events into interface commands
-   - It processes user input
-
-3. **UIManager → DisplayManager**
-   - The user interface manager controls the display of ASCII graphics and statuses
-   - It formats complex data for display
-
-4. **TimeManager → AchievementSystem**
-   - The time manager tracks time-based achievements (e.g., "Pet survived 7 days")
-   - It keeps track of time between interactions
-
+This architecture ensures a clean separation of concerns while maintaining efficient communication between components, making the codebase maintainable and extensible.
 
 ## Game Configuration System ([`include/game_config.h`](include/game_config.h))
 
