@@ -1,5 +1,42 @@
 # Petty Architecture Overview
 
+
+## Module Interactions
+
+```
+┌────────────────┐      Requests      ┌──────────────────┐
+│   GameLogic    │◄──────────────────►│    PetState      │
+└───────┬────────┘    Parameters      └────────┬─────────┘
+        │                                      │
+        ▼                                      ▼
+┌────────────────┐      Display       ┌──────────────────┐
+│  UIManager     │◄──────────────────►│ DisplayManager   │
+└───────┬────────┘      Status        └────────┬─────────┘
+        │                                      │
+        ▼                                      ▼
+┌────────────────┐    Temporal       ┌──────────────────┐
+│ TimeManager    │◄─────────────────►│ AchievementSystem│
+└────────────────┘    Processing     └──────────────────┘
+```
+
+**Interaction Details:**
+1. **GameLogic → PetState**
+   - The main controller requests and updates the pet's state
+   - It handles the pet's evolution and progress towards achievements
+
+2. **GameLogic ↔ UIManager**
+   - The game logic translates game events into interface commands
+   - It processes user input
+
+3. **UIManager → DisplayManager**
+   - The user interface manager controls the display of ASCII graphics and statuses
+   - It formats complex data for display
+
+4. **TimeManager → AchievementSystem**
+   - The time manager tracks time-based achievements (e.g., "Pet survived 7 days")
+   - It keeps track of time between interactions
+
+
 ## Game Configuration System ([`include/game_config.h`](include/game_config.h))
 
 The game configuration system is responsible for managing all the game balance parameters and constants. It is implemented as a **header-only file** ([`include/game_config.h`](include/game_config.h)) and uses namespaces to organize related constants.
